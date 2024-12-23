@@ -1,39 +1,37 @@
 package com.mars.NangPaGo.domain.user.dto;
 
+import com.mars.NangPaGo.domain.user.entity.User;
+import com.mars.NangPaGo.domain.user.enums.Provider;
+import com.mars.NangPaGo.domain.user.factory.userinfo.OAuth2UserInfo;
 import lombok.Builder;
-import lombok.Getter;
 
-@Getter
-// @EqualsAndHashCode
-public class UserRequestDto {
-
-    private String name;
-    private String password;
-    private String email;
-
-    @Builder
-    private UserRequestDto(String name, String password, String email) {
-        this.name = name;
-        this.password = password;
-        this.email = email;
+@Builder
+public record UserRequestDto(
+        String name,
+        String email,
+        String provider,
+        String providerId,
+        String profileImageUrl
+) {
+    public static UserRequestDto fromOAuth2UserInfo(OAuth2UserInfo userInfo) {
+        return UserRequestDto.builder()
+                .name(userInfo.getName())
+                .email(userInfo.getEmail())
+                .profileImageUrl(userInfo.getProfileImageUrl())
+                .provider(userInfo.getProvider())
+                .providerId(userInfo.getProviderId())
+                .build();
     }
 
-    public static UserRequestDto create(String name) {
-        return UserRequestDto.builder()
-            .name(name)
-            .build();
-    }
-
-    public static UserRequestDto create() {
-        return UserRequestDto.builder()
-            .name("기본값")
-            .build();
-    }
-
-    public static UserRequestDto createWithPassword(String password) {
-        return UserRequestDto.builder()
-            .name("기본값")
-            .password(password)
+    public User toEntity() {
+        return User.builder()
+            .name(this.name)
+            .email(this.email)
+            .role("ROLE_USER")
+            .provider(Provider.from(this.provider))
+            .providerId(this.providerId)
+            .profileImageUrl(this.profileImageUrl)
             .build();
     }
 }
+
