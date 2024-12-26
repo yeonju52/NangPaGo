@@ -1,8 +1,6 @@
 package com.mars.NangPaGo.domain.ingredient.entity;
 
-import com.mars.NangPaGo.common.jpa.BaseEntity;
 import jakarta.persistence.Id;
-//import java.util.Date;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -24,7 +22,7 @@ public class IngredientElastic {
     public IngredientElastic() {
 
     }
-    
+
     public IngredientElastic(String id, String name) {
         this.id = id;
         this.name = name;
