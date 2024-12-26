@@ -14,6 +14,7 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 @RequiredArgsConstructor
@@ -22,10 +23,10 @@ public class IngredientElasticSynchronizer {
     @Autowired private IngredientRepository ingredientRepository;
     @Autowired private IngredientElasticRepository ingredientElasticRepository;
 
+    @Transactional
     public String insertIngredientFromMysql() {
         try {
-            List<Ingredient> ingredientList;
-            ingredientList = ingredientRepository.findAll();
+            List<Ingredient> ingredientList = ingredientRepository.findAll();
 
             List<IngredientElastic> ingredientElasticList = new ArrayList<>();
             for (Ingredient ingredient : ingredientList) {
@@ -33,7 +34,7 @@ public class IngredientElasticSynchronizer {
 
                 ingredientElasticList.add(ingredientElastic);
             }
-            ingredientElasticRepository.saveAll(ingredientElasticList);
+            ingredientElasticRepository.saveAll(ingredientElasticList); // 덮어쓰기
             return "MySQL로부터 데이터를 성공적으로 삽입했습니다!";
         } catch (Exception e) {
             e.printStackTrace();
@@ -41,32 +42,23 @@ public class IngredientElasticSynchronizer {
         }
     }
 
+    @Transactional
     public String insertIngredientFromCsv(MultipartFile file) {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream(), "UTF-8"))) {
 
-            CSVParser csvParser = new CSVParser(reader, CSVFormat.DEFAULT
-                .withFirstRecordAsHeader()
-                .withIgnoreSurroundingSpaces()
-                .withTrim()
-                .withQuote('"'));
+            CSVParser csvParser = new CSVParser(reader, CSVFormat.DEFAULT.withFirstRecordAsHeader());
 
             List<IngredientElastic> ingredientElasticList = new ArrayList<>();
-            int lineNumber = 1;
 
             for (CSVRecord record : csvParser) {
-                try {
                     String id = record.get("id").trim();
                     String name = record.get("name").trim();
 
                     IngredientElastic ingredientElastic = new IngredientElastic(id, name);
 
                     ingredientElasticList.add(ingredientElastic);
-                    lineNumber++;
-                } catch (Exception e) {
-                    System.err.println("Error parsing line (" + lineNumber + "): " + e.getMessage());
-                }
             }
-            ingredientElasticRepository.saveAll(ingredientElasticList);
+            ingredientElasticRepository.saveAll(ingredientElasticList);  // 덮어쓰기
             return "CSV 파일로부터 데이터를 성공적으로 삽입했습니다!";
         } catch (Exception e) {
             e.printStackTrace();

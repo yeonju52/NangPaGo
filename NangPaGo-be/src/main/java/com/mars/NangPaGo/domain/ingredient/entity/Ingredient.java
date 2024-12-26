@@ -11,7 +11,6 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Getter
-@Setter
 @Entity
 @Table(name = "ingredients_dictionary")
 public class Ingredient {

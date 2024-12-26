@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 @RequiredArgsConstructor
-@RestController
 @RequestMapping("api/ingredient")
+@RestController
 public class IngredientElasticController {
     @Autowired private IngredientElasticSynchronizer ingredientElasticSynchronizer;
 
