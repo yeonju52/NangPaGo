@@ -1,18 +1,21 @@
 package com.mars.NangPaGo.domain.user.vo;
 
-import com.mars.NangPaGo.domain.user.entity.User;
+import com.mars.NangPaGo.domain.user.dto.UserResponseDto;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @AllArgsConstructor
 public class CustomOAuth2User implements OAuth2User {
 
-    private final User user;
+    private final UserResponseDto userResponseDto;
     private final Map<String, Object> attributes;
 
     @Override
@@ -22,7 +25,8 @@ public class CustomOAuth2User implements OAuth2User {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(() -> user.getRole());
+        return List.of(new SimpleGrantedAuthority(userResponseDto.
+            role()));
     }
 
     @Override
@@ -30,11 +34,7 @@ public class CustomOAuth2User implements OAuth2User {
         return principalValue();
     }
 
-    public User getUser() {
-        return user;
-    }
-
     private String principalValue() {
-        return user.getEmail();
+        return userResponseDto.email();
     }
 }

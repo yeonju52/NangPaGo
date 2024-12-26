@@ -1,12 +1,15 @@
 package com.mars.NangPaGo.domain.user.repository;
 
-import com.mars.NangPaGo.domain.user.entity.Refresh;
-import java.util.Optional;
+import com.mars.NangPaGo.domain.user.entity.RefreshToken;
+
+import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-public interface RefreshTokenRepository extends JpaRepository<Refresh, Long> {
+@Repository
+public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long> {
 
-    Optional<Refresh> findByToken(String token);
+    Boolean existsByRefreshToken(String refreshToken);
 
-    void deleteByToken(String token);
+    void deleteByRefreshToken(String refreshToken);
 }

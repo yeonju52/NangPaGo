@@ -3,9 +3,7 @@ package com.mars.NangPaGo.domain.user.factory.userinfo;
 import java.util.Map;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
-import lombok.ToString;
 
-@ToString
 @RequiredArgsConstructor
 public class GoogleUserInfo implements OAuth2UserInfo {
 
@@ -45,7 +43,8 @@ public class GoogleUserInfo implements OAuth2UserInfo {
     }
 
     private String getAttribute(String key) {
-        return attributes.get(key).toString();
+        Object value = attributes.get(key);
+        return value != null ? value.toString() : "";
     }
 
 }
