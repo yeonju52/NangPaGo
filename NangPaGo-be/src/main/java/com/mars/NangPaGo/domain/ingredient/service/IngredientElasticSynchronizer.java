@@ -12,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -20,8 +19,8 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 @Service
 public class IngredientElasticSynchronizer {
-    @Autowired private IngredientRepository ingredientRepository;
-    @Autowired private IngredientElasticRepository ingredientElasticRepository;
+    private final IngredientRepository ingredientRepository;
+    private final IngredientElasticRepository ingredientElasticRepository;
 
     @Transactional
     public String insertIngredientFromMysql() {
@@ -30,7 +29,7 @@ public class IngredientElasticSynchronizer {
 
             List<IngredientElastic> ingredientElasticList = new ArrayList<>();
             for (Ingredient ingredient : ingredientList) {
-                IngredientElastic ingredientElastic = new IngredientElastic(ingredient.getId(), ingredient.getName());
+                IngredientElastic ingredientElastic = IngredientElastic.create(ingredient.getId(), ingredient.getName());
 
                 ingredientElasticList.add(ingredientElastic);
             }
@@ -51,12 +50,12 @@ public class IngredientElasticSynchronizer {
             List<IngredientElastic> ingredientElasticList = new ArrayList<>();
 
             for (CSVRecord record : csvParser) {
-                    String id = record.get("id").trim();
-                    String name = record.get("name").trim();
+                String id = record.get("id").trim();
+                String name = record.get("name").trim();
 
-                    IngredientElastic ingredientElastic = new IngredientElastic(id, name);
+                IngredientElastic ingredientElastic = IngredientElastic.create(id, name);
 
-                    ingredientElasticList.add(ingredientElastic);
+                ingredientElasticList.add(ingredientElastic);
             }
             ingredientElasticRepository.saveAll(ingredientElasticList);  // 덮어쓰기
             return "CSV 파일로부터 데이터를 성공적으로 삽입했습니다!";
