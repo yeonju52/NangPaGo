@@ -1,39 +1,77 @@
 package com.mars.NangPaGo.domain.user.dto;
 
+import com.mars.NangPaGo.domain.user.entity.User;
+import com.mars.NangPaGo.domain.user.enums.Gender;
+import com.mars.NangPaGo.domain.user.enums.Provider;
+import com.mars.NangPaGo.domain.user.factory.userinfo.OAuth2UserInfo;
+import com.mars.NangPaGo.domain.user.factory.userinfo.KakaoUserInfo;
+import com.mars.NangPaGo.domain.user.factory.userinfo.NaverUserInfo;
 import lombok.Builder;
-import lombok.Getter;
 
-@Getter
-// @EqualsAndHashCode
-public class UserRequestDto {
+@Builder
+public record UserRequestDto(
+        String name,
+        String email,
+        String phone,
+        String birthday,
+        String provider,
+        String providerId,
+        String profileImageUrl,
+        String nickname,
+        String gender,
+        String createdAt,
+        String updatedAt
+) {
+    public static UserRequestDto fromOAuth2UserInfo(OAuth2UserInfo userInfo) {
+        String phone = "";
+        String birthday = "";
+        String nickname = "";
+        String gender = "";
 
-    private String name;
-    private String password;
-    private String email;
+        if (userInfo instanceof NaverUserInfo naverUserInfo) {
+            phone = naverUserInfo.getPhoneNumber();
+            birthday = naverUserInfo.getBirthDay();
+            nickname = naverUserInfo.getNickname();
+            gender = naverUserInfo.getGender();
+        } else if (userInfo instanceof KakaoUserInfo kakaoUserInfo) {
+            phone = kakaoUserInfo.getPhoneNumber();
+            birthday = kakaoUserInfo.getBirthday();
+            nickname = kakaoUserInfo.getName();
+            gender = kakaoUserInfo.getGender();
+        }
 
-    @Builder
-    private UserRequestDto(String name, String password, String email) {
-        this.name = name;
-        this.password = password;
-        this.email = email;
+        return UserRequestDto.builder()
+                .name(userInfo.getName())
+                .email(userInfo.getEmail())
+                .phone(phone)
+                .birthday(birthday)
+                .nickname(nickname)
+                .gender(gender)
+                .profileImageUrl(userInfo.getProfileImageUrl())
+                .provider(userInfo.getProvider())
+                .providerId(userInfo.getProviderId())
+                .build();
     }
 
-    public static UserRequestDto create(String name) {
-        return UserRequestDto.builder()
-            .name(name)
-            .build();
-    }
+    public User toEntity() {
+        String birthDate = "";
+        if (this.birthday != null && !this.birthday.isEmpty()) {
+            birthDate = this.birthday;
+        }
 
-    public static UserRequestDto create() {
-        return UserRequestDto.builder()
-            .name("기본값")
-            .build();
-    }
+        Gender genderEnum = Gender.fromProvider(this.provider, this.gender);
 
-    public static UserRequestDto createWithPassword(String password) {
-        return UserRequestDto.builder()
-            .name("기본값")
-            .password(password)
+        return User.builder()
+            .name(this.name)
+            .email(this.email)
+            .phone(this.phone)
+            .nickname(this.nickname)
+            .birthday(birthDate)
+            .gender(genderEnum)
+            .role("ROLE_USER")
+            .provider(Provider.from(this.provider))
+            .providerId(this.providerId)
+            .profileImageUrl(this.profileImageUrl)
             .build();
     }
 }
