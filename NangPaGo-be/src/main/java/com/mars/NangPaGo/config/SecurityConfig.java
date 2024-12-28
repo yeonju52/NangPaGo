@@ -54,7 +54,8 @@ public class SecurityConfig {
                     "/oauth2/**",
                     "/token/reissue",
                     "/auth/status",
-                    "/common/example/**"  // TODO: 제거 예정
+                    "/recipe/{id}",
+                    "/common/example/**" // TODO: 제거 예정
                 ).permitAll()
                 .anyRequest().authenticated());
         http.addFilterBefore(new CustomLogoutFilter(customLogoutService), LogoutFilter.class);
