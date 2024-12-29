@@ -35,6 +35,7 @@ public class SecurityConfig {
         "/token/reissue",
         "/auth/status",
         "/recipe/{id}",
+        "/recipe/{id}/comments",
         "/ingredient/search",
         "/swagger-ui/**",
         "/swagger-ui.html",
@@ -66,7 +67,12 @@ public class SecurityConfig {
         http
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(WHITE_LIST).permitAll()
-                .anyRequest().authenticated());
+                .requestMatchers(
+                    "/recipe/{id}/comments/**"
+                ).hasAuthority("ROLE_USER")
+                .anyRequest().authenticated()
+            );
+
         http.addFilterBefore(new CustomLogoutFilter(customLogoutService), LogoutFilter.class);
         http
 
