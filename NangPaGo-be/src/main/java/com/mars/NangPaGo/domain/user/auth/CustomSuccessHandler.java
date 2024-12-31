@@ -1,8 +1,8 @@
 package com.mars.NangPaGo.domain.user.auth;
 
-import com.mars.NangPaGo.domain.user.dto.RefreshTokenDto;
-import com.mars.NangPaGo.domain.user.repository.RefreshTokenRepository;
-import com.mars.NangPaGo.domain.user.util.JwtUtil;
+import com.mars.NangPaGo.domain.jwt.dto.RefreshTokenDto;
+import com.mars.NangPaGo.domain.jwt.repository.RefreshTokenRepository;
+import com.mars.NangPaGo.domain.jwt.util.JwtUtil;
 import com.mars.NangPaGo.domain.user.vo.CustomOAuth2User;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
@@ -22,6 +23,9 @@ import java.io.IOException;
 @RequiredArgsConstructor
 @Component
 public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
+
+    @Value("${client.host}")
+    private String clientHost;
 
     private final JwtUtil jwtUtil;
     private final RefreshTokenRepository refreshTokenRepository;
@@ -45,7 +49,7 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
         response.addCookie(createCookie("access", access, jwtUtil.getAccessTokenExpireMillis()));
         response.addCookie(createCookie("refresh", refresh, jwtUtil.getRefreshTokenExpireMillis()));
-        response.sendRedirect("http://localhost:5173/");
+        response.sendRedirect(clientHost);
     }
 
     private void saveRefreshToken(String email, String refreshToken) {

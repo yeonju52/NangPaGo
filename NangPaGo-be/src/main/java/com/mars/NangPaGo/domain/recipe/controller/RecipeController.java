@@ -1,33 +1,66 @@
 package com.mars.NangPaGo.domain.recipe.controller;
 
+import com.mars.NangPaGo.common.dto.ResponseDto;
+import com.mars.NangPaGo.domain.recipe.dto.RecipeEsResponseDto;
+import com.mars.NangPaGo.domain.recipe.dto.RecipeLikeRequestDto;
+import com.mars.NangPaGo.domain.recipe.dto.RecipeLikeResponseDto;
+import com.mars.NangPaGo.domain.recipe.dto.RecipeResponseDto;
+import com.mars.NangPaGo.domain.recipe.service.RecipeEsService;
 import com.mars.NangPaGo.domain.recipe.service.RecipeLikeService;
+import com.mars.NangPaGo.domain.recipe.service.RecipeService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.security.Principal;
+import org.springframework.web.multipart.MultipartFile;
 
 @RequiredArgsConstructor
-@RequestMapping("/recipe")
+@Tag(name = "레시피 API", description = "레시피 관련 API")
+@RequestMapping("/api/recipe")
 @RestController
 public class RecipeController {
 
+    private final RecipeService recipeService;
     private final RecipeLikeService recipeLikeService;
+    private final RecipeEsService recipeEsService;
 
-    @PostMapping("/toggle/like")
-    public ResponseEntity<String> toggleRecipeLike(@RequestParam Long recipeId, Principal principal) {
-        String email = principal.getName();
+    @GetMapping("/{id}")
+    public ResponseDto<RecipeResponseDto> recipeById(@PathVariable("id") Long id) {
+        return ResponseDto.of(recipeService.recipeById(id), "레시피를 성공적으로 조회했습니다.");
+    }
 
-        if (email == null || email.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body("유저 인증 실패");
-        }
+    @GetMapping("/{id}/like/status")
+    public ResponseEntity<Boolean> checkLikeStatus(@RequestParam("email") String email, @PathVariable("id") Long id) {
+        return ResponseEntity.ok(recipeLikeService.isLikedByUser(email, id));
+    }
 
-        recipeLikeService.toggleRecipeLike(recipeId, email);
-        return ResponseEntity.ok("좋아요 정보를 수정했습니다.");
+    @PostMapping("/{id}/like/toggle")
+    public ResponseDto<RecipeLikeResponseDto> toggleLike(@RequestBody RecipeLikeRequestDto requestDto) {
+        return ResponseDto.of(recipeLikeService.toggleRecipeLike(requestDto), "좋아요 이벤트 발생");
+    }
+
+    @GetMapping("/search")
+    public ResponseDto<Page<RecipeEsResponseDto>> searchRecipes(
+        @RequestParam(name = "pageNo", defaultValue = "1") int page,
+        @RequestParam(name = "pageSize", defaultValue = "10") int size,
+        @RequestParam(name = "keyword", required = false) String keyword) {
+        return ResponseDto.of(recipeEsService.searchRecipes(page, size, keyword), "검색 결과를 성공적으로 조회했습니다.");
+    }
+
+    @PostMapping("/es")
+    public ResponseDto<String> uploadCsvFile(@RequestParam("file") MultipartFile file) {
+        return ResponseDto.of(recipeEsService.insertRecipesFromCsv(file), "CSV 파일 업로드 성공");
+    }
+
+    @PostMapping("/es/index")
+    public ResponseDto<String> createIndex() {
+        return ResponseDto.of(recipeEsService.createIndex(), "인덱스를 성공적으로 생성했습니다.");
     }
 }
