@@ -10,8 +10,8 @@ on:
 
 jobs:
   build:
+    # if: github.event_name == 'pull_request'    # PR일 때만 build 잡 실행
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -42,7 +42,7 @@ jobs:
         run: cd NangPaGo-fe && npm run build
 
   deploy:
-    needs: build
+#    needs: build
     if: github.event_name == 'release'
     runs-on: ubuntu-latest
     steps:
@@ -64,7 +64,7 @@ jobs:
       - name: Docker build & push to docker repo
         run: |
           echo ${{ secrets.DOCKER_ACCESS_TOKEN }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
-          docker buildx build --platform linux/amd64 -t zooxop/nangpago-app:latest --push .
+          docker buildx build --platform linux/amd64 -t zooxop/nangpago-app:latest -f ./NangPaGo-be/Dockerfile ./NangPaGo-be
 
       # Frontend Deploy
       - name: Set up Node.js
@@ -80,9 +80,8 @@ jobs:
 
       - name: Frontend Docker build & push
         run: |
-          cd NangPaGo-fe
           echo ${{ secrets.DOCKER_ACCESS_TOKEN }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
-          docker buildx build --platform linux/amd64 -t zooxop/nangpago-frontend:latest --push .
+          docker buildx build --platform linux/amd64 -t zooxop/nangpago-frontend:latest -f ./NangPaGo-fe/Dockerfile ./NangPaGo-fe
 
       - name: Deploy to instance
         uses: appleboy/ssh-action@master
@@ -90,7 +89,8 @@ jobs:
         with:
           host: ${{ secrets.SERVER_ADDRESS }}
           port: ${{ secrets.SERVER_PORT }}
-          username: root
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           envs: GITHUB_SHA
           script: |
