@@ -15,8 +15,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-@RequiredArgsConstructor
 @Transactional
+@RequiredArgsConstructor
 @Service
 public class RecipeLikeService {
 
@@ -38,15 +38,9 @@ public class RecipeLikeService {
         User user = findUserByEmail(email);
         Recipe recipe = findRecipeById(recipeId);
 
-        return recipeLikeRepository.findWithLockByUserAndRecipe(user, recipe)
-            .map(recipeLike -> {
-                recipeLikeRepository.delete(recipeLike);
-                return false;
-            })
-            .orElseGet(() -> {
-                recipeLikeRepository.save(RecipeLike.of(user, recipe));
-                return true;
-            });
+        return recipeLikeRepository.findByUserAndRecipe(user, recipe)
+            .map(this::removeLike)
+            .orElseGet(() -> addLike(user, recipe));
     }
 
     private User findUserByEmail(String email) {
@@ -57,5 +51,15 @@ public class RecipeLikeService {
     private Recipe findRecipeById(Long recipeId) {
         return recipeRepository.findById(recipeId)
             .orElseThrow(() -> NOT_FOUND_RECIPE.of("레시피를 찾을 수 없습니다."));
+    }
+
+    private boolean removeLike(RecipeLike recipeLike) {
+        recipeLikeRepository.delete(recipeLike);
+        return false;
+    }
+
+    private boolean addLike(User user, Recipe recipe) {
+        recipeLikeRepository.save(RecipeLike.of(user, recipe));
+        return true;
     }
 }
