@@ -88,12 +88,12 @@ jobs:
       - name: Backend Docker build & push
         run: |
           echo ${{ secrets.DOCKER_ACCESS_TOKEN }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
-          docker buildx build --platform linux/amd64 -t zooxop/nangpago-app:${{ env.VERSION }} -f ./NangPaGo-be/Dockerfile ./NangPaGo-be
+          docker buildx build --platform linux/amd64 -t zooxop/nangpago-app:${{ env.VERSION }} -t zooxop/nangpago-app:latest -f ./NangPaGo-be/Dockerfile ./NangPaGo-be --push
 
       - name: Frontend Docker build & push
         run: |
           echo ${{ secrets.DOCKER_ACCESS_TOKEN }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
-          docker buildx build --platform linux/amd64 -t zooxop/nangpago-frontend:${{ env.VERSION }} -f ./NangPaGo-fe/Dockerfile ./NangPaGo-fe
+          docker buildx build --platform linux/amd64 -t zooxop/nangpago-frontend:${{ env.VERSION }} -t zooxop/nangpago-frontend:latest -f ./NangPaGo-fe/Dockerfile ./NangPaGo-fe --push
 
       # change Docker images and re-start containers on Server
       - name: Deploy to instance
@@ -106,6 +106,8 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           script: |
             docker rm -f react-front spring-boot-app || true
+            sed -i 's/^API_SERVER_IMAGE=.*/API_SERVER_IMAGE=zooxop\/nangpago-app:${{ env.VERSION }}/' .env
+            sed -i 's/^REACT_SERVER_IMAGE=.*/REACT_SERVER_IMAGE=zooxop\/nangpago-frontend:${{ env.VERSION }}/' .env
             sudo docker pull zooxop/nangpago-app:${{ env.VERSION }}
             sudo docker pull zooxop/nangpago-frontend:${{ env.VERSION }}
             docker-compose -p nangpago up -d
