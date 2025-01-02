@@ -38,7 +38,6 @@ function Recipe({ recipe }) {
     }
   };
 
-  // 좋아요 토글
   const toggleHeart = async () => {
     if (!isLoggedIn) {
       setShowLoginModal(true);
@@ -56,7 +55,6 @@ function Recipe({ recipe }) {
     }
   };
 
-  // 즐겨찾기 토글
   const toggleStar = async () => {
     if (!isLoggedIn) {
       setShowLoginModal(true);
@@ -102,8 +100,22 @@ function Recipe({ recipe }) {
             </button>
           </div>
         </div>
-        <div>
-          <p className="text-gray-600 text-[14px] mt-2">{recipe.category}</p>
+        <div className="flex gap-2">
+          {recipe.mainIngredient && (
+            <p className="bg-[var(--primary-color)] text-white text-[14px] mt-2 p-1 rounded-md">
+              {recipe.mainIngredient}
+            </p>
+          )}
+          {recipe.category && (
+            <p className="bg-[var(--primary-color)] text-white text-[14px] mt-2 p-1 rounded-md">
+              {recipe.category}
+            </p>
+          )}
+          {recipe.cookingMethod && (
+            <p className="bg-[var(--primary-color)] text-white text-[14px] mt-2 p-1 rounded-md">
+              {recipe.cookingMethod}
+            </p>
+          )}
         </div>
         <div className="mt-7">
           <h2 className="text-lg font-semibold mb-3">재료</h2>
