@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
 @RequiredArgsConstructor
 @Tag(name = "레시피 API", description = "레시피 관련 API")
@@ -54,7 +53,7 @@ public class RecipeController {
         return ResponseDto.of(recipeEsService.searchRecipes(page, size, keyword), "검색 결과를 성공적으로 조회했습니다.");
     }
 
-    @PostMapping("/es/sync")
+    @PostMapping("/bulk-upload/mysql")
     public ResponseDto<String> syncMysql() {
         return ResponseDto.of(recipeEsSynchronizerService.insertRecipeFromMysql(), "MySQL 데이터를 Elastic에 성공적으로 동기화했습니다");
     }
