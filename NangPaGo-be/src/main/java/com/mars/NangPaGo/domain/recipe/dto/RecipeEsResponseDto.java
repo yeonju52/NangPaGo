@@ -1,6 +1,6 @@
 package com.mars.NangPaGo.domain.recipe.dto;
 
-import com.mars.NangPaGo.domain.recipe.entity.RecipeES;
+import com.mars.NangPaGo.domain.recipe.entity.RecipeEs;
 import lombok.Builder;
 import java.util.List;
 
@@ -11,15 +11,17 @@ public record RecipeEsResponseDto(
     String recipeImageUrl,
     List<String> ingredients,
     List<String> ingredientsTag,
+    List<String> ingredientsDisplayTag,
     float matchScore
 ) {
-    public static RecipeEsResponseDto of(RecipeES recipeES, float score) {
+    public static RecipeEsResponseDto of(RecipeEs recipeEs, float score) {
         return RecipeEsResponseDto.builder()
-            .id(recipeES.getId())
-            .name(recipeES.getName())
-            .recipeImageUrl(recipeES.getRecipeImageUrl())
-            .ingredients(recipeES.getIngredients())
-            .ingredientsTag(recipeES.getIngredientsTag())
+            .id(recipeEs.getId())
+            .name(recipeEs.getName())
+            .recipeImageUrl(recipeEs.getRecipeImageUrl())
+            .ingredients(recipeEs.getIngredients())
+            .ingredientsTag(recipeEs.getIngredientsTag())
+            .ingredientsDisplayTag(recipeEs.getIngredientsDisplayTag())
             .matchScore(score)
             .build();
     }

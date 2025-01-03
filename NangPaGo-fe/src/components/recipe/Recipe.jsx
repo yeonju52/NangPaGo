@@ -22,16 +22,11 @@ function Recipe({ recipe }) {
     }
   }, [isLoggedIn]);
 
-  // 좋아요와 즐겨찾기 상태를 동시에 가져오는 함수
   const fetchStatuses = async () => {
     try {
       const [likeResponse, favoriteResponse] = await Promise.all([
-        axiosInstance.get(
-          `/api/recipe/${recipe.id}/like/status?email=${userEmail}`,
-        ),
-        axiosInstance.get(
-          `/api/recipe/${recipe.id}/favorite/status?email=${userEmail}`,
-        ),
+        axiosInstance.get(`/api/recipe/${recipe.id}/like/status`),
+        axiosInstance.get(`/api/recipe/${recipe.id}/favorite/status`),
       ]);
       setIsHeartActive(likeResponse.data);
       setIsStarActive(favoriteResponse.data);
@@ -40,7 +35,6 @@ function Recipe({ recipe }) {
     }
   };
 
-  // 좋아요 토글
   const toggleHeart = async () => {
     if (!isLoggedIn) {
       setShowLoginModal(true);
@@ -50,19 +44,14 @@ function Recipe({ recipe }) {
     try {
       const response = await axiosInstance.post(
         `/api/recipe/${recipe.id}/like/toggle`,
-        {
-          recipeId: recipe.id,
-          email: userEmail,
-        },
       );
-      setIsHeartActive(response.data.isLiked); // 서버 응답 값 반영
-      fetchStatuses(); // 상태 다시 불러오기
+      console.log('Response:', response);
+      setIsHeartActive(response.data.data.liked);
     } catch (error) {
       console.error('좋아요 상태를 변경하는 중 오류가 발생했습니다.', error);
     }
   };
 
-  // 즐겨찾기 토글
   const toggleStar = async () => {
     if (!isLoggedIn) {
       setShowLoginModal(true);
@@ -72,13 +61,9 @@ function Recipe({ recipe }) {
     try {
       const response = await axiosInstance.post(
         `/api/recipe/${recipe.id}/favorite/toggle`,
-        {
-          recipeId: recipe.id,
-          email: userEmail,
-        },
       );
-      setIsStarActive(response.data.isFavorite); // 서버 응답 값 반영
-      fetchStatuses(); // 상태 다시 불러오기
+      console.log('Response:', response);
+      setIsStarActive(response.data.data.favorited);
     } catch (error) {
       console.error('즐겨찾기 상태를 변경하는 중 오류가 발생했습니다.', error);
     }
@@ -95,7 +80,7 @@ function Recipe({ recipe }) {
             className="w-full h-48 object-cover rounded-md"
           />
         </div>
-        <div className="mt-4 flex items-center justify-between">
+        <div className="mt-4 flex items-center pb-3 justify-between">
           <h1 className="text-xl font-bold">{recipe.name}</h1>
           <div className="flex gap-2">
             <button
@@ -112,8 +97,22 @@ function Recipe({ recipe }) {
             </button>
           </div>
         </div>
-        <div>
-          <p className="text-gray-600 text-[14px] mt-2">{recipe.category}</p>
+        <div className="flex gap-2">
+          {recipe.mainIngredient && (
+            <p className="bg-[var(--secondary-color)] text-black text-sm font-medium px-2 py-1 rounded">
+              {recipe.mainIngredient}
+            </p>
+          )}
+          {recipe.category && (
+            <p className="bg-[var(--secondary-color)] text-black text-sm font-medium px-2 py-1 rounded">
+              {recipe.category}
+            </p>
+          )}
+          {recipe.cookingMethod && (
+            <p className="bg-[var(--secondary-color)] text-black text-sm font-medium px-2 py-1 rounded">
+              {recipe.cookingMethod}
+            </p>
+          )}
         </div>
         <div className="mt-7">
           <h2 className="text-lg font-semibold mb-3">재료</h2>
