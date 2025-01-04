@@ -64,6 +64,9 @@ curl -XPUT "${ELASTICSEARCH_URI}/ingredients_dictionary?include_type_name=true&p
   "mappings": {
     "_doc": {
       "properties": {
+        "ingredient_id": {
+          "type": "long"
+        },
         "name": {
           "type": "text",
           "fields": {
@@ -81,6 +84,3 @@ curl -XPUT "${ELASTICSEARCH_URI}/ingredients_dictionary?include_type_name=true&p
     }
   }
 }'
-
-# 3. 데이터 업로드
-curl -XPOST "${ELASTICSEARCH_URI}/_bulk?pretty" -H 'Content-Type: application/json' --data-binary @ingredients_dictionary.json

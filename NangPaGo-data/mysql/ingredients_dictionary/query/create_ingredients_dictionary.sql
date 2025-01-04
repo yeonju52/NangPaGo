@@ -2,7 +2,8 @@ DROP TABLE IF EXISTS refrigerator;
 DROP TABLE IF EXISTS ingredients_dictionary;
 
 CREATE TABLE ingredients_dictionary (
-  id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `id` BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `ingredient_id` BIGINT NOT NULL UNIQUE,
   name VARCHAR(50) DEFAULT NULL
 );
 
