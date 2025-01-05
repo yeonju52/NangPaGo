@@ -1,10 +1,11 @@
 package com.mars.NangPaGo.config;
 
-import com.mars.NangPaGo.domain.user.auth.CustomLogoutFilter;
-import com.mars.NangPaGo.domain.user.auth.CustomSuccessHandler;
-import com.mars.NangPaGo.domain.user.service.CustomLogoutService;
-import com.mars.NangPaGo.domain.user.service.CustomOAuth2UserService;
-import com.mars.NangPaGo.domain.jwt.util.JwtFilter;
+import com.mars.NangPaGo.domain.auth.entrypoint.UnauthorizedEntryPoint;
+import com.mars.NangPaGo.domain.auth.filter.CustomLogoutFilter;
+import com.mars.NangPaGo.domain.auth.handler.CustomSuccessHandler;
+import com.mars.NangPaGo.domain.auth.service.CustomLogoutService;
+import com.mars.NangPaGo.domain.auth.service.CustomOAuth2UserService;
+import com.mars.NangPaGo.domain.auth.filter.JwtAuthenticationFilter;
 import com.mars.NangPaGo.domain.jwt.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,6 +13,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -32,7 +34,6 @@ public class SecurityConfig {
         "/api/oauth2/authorization/**",
         "/api/login/oauth2/code/**",
         "/api/token/reissue",
-        "/api/auth/status",
         "/api/recipe/{id}",
         "/api/recipe/{id}/comments",
         "/api/ingredient/search",
@@ -45,20 +46,25 @@ public class SecurityConfig {
 
     private final JwtUtil jwtUtil;
     private final CustomOAuth2UserService customOAuth2UserService;
-    private final CustomLogoutService customLogoutService;
     private final CustomSuccessHandler customSuccessHandler;
+    private final CustomLogoutService customLogoutService;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
+        return http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .csrf((csrf) -> csrf.disable());
-        http
-            .formLogin((form) -> form.disable());
-        http
-            .addFilterBefore(new JwtFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class);
-        http
-            .oauth2Login((oauth2) -> oauth2
+            .csrf(AbstractHttpConfigurer::disable)
+            .formLogin(AbstractHttpConfigurer::disable)
+            .httpBasic(AbstractHttpConfigurer::disable)
+            .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
+            .addFilterBefore(new JwtAuthenticationFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(new CustomLogoutFilter(customLogoutService), LogoutFilter.class)
+            .exceptionHandling(exception -> exception
+                .authenticationEntryPoint(new UnauthorizedEntryPoint())
+            )
+            .oauth2Login(oauth2 -> oauth2
                 .authorizationEndpoint(authorization ->
                     authorization.baseUri("/api/oauth2/authorization")
                 )
@@ -66,8 +72,7 @@ public class SecurityConfig {
                 .userInfoEndpoint(userInfoEndpointConfig ->
                     userInfoEndpointConfig.userService(customOAuth2UserService))
                 .successHandler(customSuccessHandler)
-            );
-        http
+            )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(WHITE_LIST).permitAll()
                 .requestMatchers(
@@ -77,14 +82,8 @@ public class SecurityConfig {
                 )
                 .hasAuthority("ROLE_USER")
                 .anyRequest().authenticated()
-            );
-
-        http.addFilterBefore(new CustomLogoutFilter(customLogoutService), LogoutFilter.class);
-        http
-            .sessionManagement(session ->
-                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-
-        return http.build();
+            )
+            .build();
     }
 
     @Bean

@@ -1,4 +1,4 @@
-package com.mars.NangPaGo.domain.user.service;
+package com.mars.NangPaGo.domain.auth.service;
 
 import com.mars.NangPaGo.domain.jwt.repository.RefreshTokenRepository;
 import com.mars.NangPaGo.domain.jwt.util.JwtUtil;
@@ -21,11 +21,12 @@ public class CustomLogoutService {
     public void handleLogout(String refreshToken, HttpServletResponse response) {
         validateRefreshToken(refreshToken);
 
-        if (!refreshTokenRepository.existsByRefreshToken(refreshToken)) {
+        if (Boolean.FALSE.equals(refreshTokenRepository.existsByRefreshToken(refreshToken))) {
             throw new IllegalArgumentException("유효하지 않은 Refresh Token입니다.");
         }
 
-        refreshTokenRepository.deleteByRefreshToken(refreshToken);
+        String email = jwtUtil.getEmail(refreshToken);
+        refreshTokenRepository.deleteByEmail(email);
 
         invalidateCookie(response, "refresh");
         invalidateCookie(response, "access");
@@ -35,7 +36,7 @@ public class CustomLogoutService {
 
     private void validateRefreshToken(String refreshToken) {
         try {
-            if (jwtUtil.isExpired(refreshToken)) {
+            if (Boolean.TRUE.equals(jwtUtil.isExpired(refreshToken))) {
                 throw new IllegalArgumentException("Refresh Token이 만료되었습니다.");
             }
 

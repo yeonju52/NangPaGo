@@ -7,6 +7,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
+
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import lombok.RequiredArgsConstructor;
@@ -35,13 +36,15 @@ public class TokenService {
         String role = jwtUtil.getRole(refreshToken);
 
         String newAccessToken = jwtUtil.createJwt("access", email, role, jwtUtil.getAccessTokenExpireMillis());
-        String newRefreshToken = jwtUtil.createJwt("refresh", email, role, jwtUtil.getRefreshTokenExpireMillis());
-
-        refreshTokenRepository.deleteByRefreshToken(refreshToken);
-        saveNewRefreshToken(email, newRefreshToken);
 
         response.addCookie(createCookie("access", newAccessToken, jwtUtil.getAccessTokenExpireMillis()));
-        response.addCookie(createCookie("refresh", newRefreshToken, jwtUtil.getRefreshTokenExpireMillis()));
+    }
+
+    @Transactional
+    public void renewRefreshToken(String email, String refreshToken) {
+        LocalDateTime expiration = LocalDateTime.now().plusNanos(jwtUtil.getRefreshTokenExpireMillis() * 1_000_000);
+        refreshTokenRepository.deleteByEmail(email);
+        refreshTokenRepository.save(new RefreshTokenDto(email, refreshToken, expiration).toEntity());
     }
 
     private String getRefreshTokenFromRequest(HttpServletRequest request) {
@@ -57,7 +60,7 @@ public class TokenService {
     }
 
     private void validateRefreshToken(String refreshToken) {
-        if (jwtUtil.isExpired(refreshToken)) {
+        if (Boolean.TRUE.equals(jwtUtil.isExpired(refreshToken))) {
             throw UNAUTHORIZED_TOKEN_EXPIRED.of("Refresh Token이 만료되었습니다.");
         }
 
@@ -66,17 +69,12 @@ public class TokenService {
         }
     }
 
-    private void saveNewRefreshToken(String email, String refreshToken) {
-        refreshTokenRepository.save(new RefreshTokenDto(email, refreshToken,
-            LocalDateTime.now().plusNanos(jwtUtil.getRefreshTokenExpireMillis() * 1_000_000)).toEntity());
-    }
-
     private Cookie createCookie(String key, String value, long expireMillis) {
         Cookie cookie = new Cookie(key, value);
         cookie.setMaxAge((int) (expireMillis / 1000));
         cookie.setSecure(true);
         cookie.setPath("/");
-        cookie.setHttpOnly(true);
+        cookie.setHttpOnly(false);
         return cookie;
     }
 }
