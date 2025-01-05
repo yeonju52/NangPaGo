@@ -5,15 +5,22 @@ import lombok.Builder;
 
 @Builder
 public record IngredientEsResponseDto(
-    String id,
-    String name,
+    Long ingredientId,
+    String highlightedName,
     Double matchScore
 ) {
 
+    public static IngredientEsResponseDto of(IngredientEs ingredientEs, String highlightedName) {
+        return IngredientEsResponseDto.builder()
+            .ingredientId(ingredientEs.getIngredientId())
+            .highlightedName(highlightedName)
+            .build();
+    }
+
     public static IngredientEsResponseDto of(IngredientEs ingredientEs, String highlightedName, double matchScore) {
         return IngredientEsResponseDto.builder()
-            .id(ingredientEs.getId())
-            .name(highlightedName)
+            .ingredientId(ingredientEs.getIngredientId())
+            .highlightedName(highlightedName)
             .matchScore(matchScore)
             .build();
     }

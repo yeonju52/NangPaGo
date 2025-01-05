@@ -11,4 +11,4 @@ if __name__ == "__main__":
         with open("ingredients_dictionary.json", "w", encoding="utf-8") as f:
             for row in reader:
                 f.write(f'{{ "index":{{ "_index" : "ingredients_dictionary", "_type" : "_doc" }} }}\n')
-                f.write(json.dumps({"name": row["name"]}, ensure_ascii=False) + "\n")
+                f.write(json.dumps({"ingredient_id": int(row["id"]), "name": row["name"]}, ensure_ascii=False) + "\n")

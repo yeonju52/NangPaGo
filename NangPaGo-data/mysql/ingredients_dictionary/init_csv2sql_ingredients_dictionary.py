@@ -3,7 +3,7 @@ import pymysql
 import argparse
 
 # CSV 파일 경로
-csv_file_path = "../datasets/ingredients_dictionary.csv"
+csv_file_path = "../../datasets/ingredients_dictionary.csv"
 
 # SQL 파일 경로
 create_tables_sql_file = "query/create_ingredients_dictionary.sql"
