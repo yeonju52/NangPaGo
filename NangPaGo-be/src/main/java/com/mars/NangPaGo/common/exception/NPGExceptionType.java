@@ -14,6 +14,9 @@ public enum NPGExceptionType {
     BAD_REQUEST(HttpStatus.BAD_REQUEST, "잘못된 요청"),
     BAD_REQUEST_INVALID(HttpStatus.BAD_REQUEST, "유효하지 않은 요청"),
     BAD_REQUEST_INVALID_COMMENT(HttpStatus.BAD_REQUEST, "댓글 내용은 비어 있을 수 없습니다."),
+    BAD_REQUEST_INVALID_PAGE_NO(HttpStatus.BAD_REQUEST, "pageNo 는 양수로 입력해야 합니다."),
+    BAD_REQUSET_CHECK_NICKNAME(HttpStatus.BAD_REQUEST, "닉네임 중복 검사를 해야합니다."),
+    BAD_REQUEST_UNUSABLE_NICKNAME(HttpStatus.BAD_REQUEST, "사용할 수 없는 닉네임입니다."),
 
     // UNAUTHORIZED(401)
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "인증 실패"),
@@ -30,8 +33,11 @@ public enum NPGExceptionType {
     NOT_FOUND(HttpStatus.NOT_FOUND, "데이터가 존재하지 않음"),
     NOT_FOUND_USER(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."),
     NOT_FOUND_RECIPE(HttpStatus.NOT_FOUND, "레시피를 찾을 수 없습니다."),
+    NOT_FOUND_RECIPE_FAVORITE(HttpStatus.NOT_FOUND, "즐겨찾기한 레시피가 없습니다."),
     NOT_FOUND_COMMENT(HttpStatus.NOT_FOUND, "댓글을 찾을 수 없습니다."),
     NOT_FOUND_INGREDIENT(HttpStatus.NOT_FOUND, "등록된 식재료 정보를 찾을 수 없습니다."),
+    NOT_FOUND_COMMUNITY(HttpStatus.NOT_FOUND, "게시물을 찾을 수 없습니다."),
+    NOT_FOUND_COMMUNITY_COMMENT(HttpStatus.NOT_FOUND, "게시물 내 댓글을 찾을 수 없습니다."),
 
     // Conflict(409)
     DUPLICATE_INGREDIENT(HttpStatus.CONFLICT, "이미 등록되어있는 정보입니다."),
@@ -39,6 +45,7 @@ public enum NPGExceptionType {
     // Internal Server Error(500)
     SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버 에러"),
     SERVER_ERROR_ELASTICSEARCH(HttpStatus.INTERNAL_SERVER_ERROR, "Elasticsearch 서버 에러"),
+    SERVER_ERROR_IMAGE_UPLOAD(HttpStatus.INTERNAL_SERVER_ERROR, "이미지 업로드 중 서버 오류"),
     ;
 
     private final HttpStatus httpStatus;

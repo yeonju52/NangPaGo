@@ -1,5 +1,6 @@
 package com.mars.NangPaGo.domain.ingredient.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Id;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -25,19 +26,23 @@ public class IngredientEs {
     @Id
     private String id;
 
+    @JsonProperty("ingredient_id")
+    @Field(type = FieldType.Long, name = "ingredient_id")
+    private Long ingredientId;
+
     @Field(type = FieldType.Text)
     private String name;
 
-    public static IngredientEs of(String id, String name) {
+    public static IngredientEs of(Long ingredientId, String name) {
         return IngredientEs.builder()
-            .id(id)
+            .ingredientId(ingredientId)
             .name(name)
             .build();
     }
 
-    public static IngredientEs of(Long id, String name) {
+    public static IngredientEs of(String ingredientId, String name) {
         return IngredientEs.builder()
-            .id(String.valueOf(id))
+            .ingredientId(Long.valueOf(ingredientId))
             .name(name)
             .build();
     }

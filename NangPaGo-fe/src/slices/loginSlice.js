@@ -1,9 +1,20 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axiosInstance from '../api/axiosInstance';
 
+const hasAccessToken = () => {
+  return document.cookie.split('; ').some((row) => row.startsWith('access'));
+};
+
+const hasRefreshToken = () => {
+  return document.cookie.split('; ').some((row) => row.startsWith('refresh'));
+};
+
 export const fetchUserStatus = createAsyncThunk(
   'login/fetchUserStatus',
   async (_, { rejectWithValue }) => {
+    if (!hasAccessToken() && !hasRefreshToken()) {
+      return rejectWithValue('No tokens found');
+    }
     try {
       const response = await axiosInstance.get('/api/auth/status');
       const { data } = response.data;

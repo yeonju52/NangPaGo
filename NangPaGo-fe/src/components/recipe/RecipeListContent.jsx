@@ -2,22 +2,32 @@ import RecipeCard from './RecipeCard';
 import { useEffect, useState } from 'react';
 import axiosInstance from '../../api/axiosInstance.js';
 
-function RecipeListContent({ activeTab, images, searchTerm }) {
-  const [recipes, setRecipes] = useState([]);
+function RecipeListContent({ activeTab, searchTerm = '' }) {
+  const [recipes, setRecipes] = useState([]); 
+  const [hasFetched, setHasFetched] = useState(false);
   const pageNo = 1;
   const pageSize = 10;
-  const keyword = '';
 
   useEffect(() => {
-    fetchRecipes();
-  }, [pageNo, pageSize, keyword]);
+    if (activeTab === 'recommended') {
+      fetchRecipes();
+      setHasFetched(true);
+    }
+  }, [activeTab, searchTerm]);
 
   const fetchRecipes = async () => {
     try {
-      const response = await axiosInstance.get('/api/recipe/search', {
-        params: { pageNo, pageSize, keyword },
-      });
+      const params = {
+        pageNo,
+        pageSize,
+      };
 
+      if (searchTerm) {
+        params.keyword = searchTerm;
+        params.searchType = 'NAME';
+      }
+
+      const response = await axiosInstance.get('/api/recipe/search', { params });
       setRecipes(response.data.data.content);
     } catch (error) {
       console.error('레시피를 가져오는 중 오류가 발생했습니다:', error);

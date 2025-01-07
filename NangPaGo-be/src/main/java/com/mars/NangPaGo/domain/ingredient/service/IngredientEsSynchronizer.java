@@ -25,14 +25,16 @@ public class IngredientEsSynchronizer {
     @Transactional
     public String insertIngredientFromMysql() {
         try {
-            List<Ingredient> ingredientList = ingredientRepository.findAll();
+            ingredientEsRepository.deleteAll();
 
+            List<Ingredient> ingredientList = ingredientRepository.findAll();
             List<IngredientEs> ingredientEsList = new ArrayList<>();
             for (Ingredient ingredient : ingredientList) {
-                IngredientEs ingredientEs = IngredientEs.of(ingredient.getId(), ingredient.getName());
+                IngredientEs ingredientEs = IngredientEs.of(ingredient.getIngredientId(), ingredient.getName());
 
                 ingredientEsList.add(ingredientEs);
             }
+
             ingredientEsRepository.saveAll(ingredientEsList); // 덮어쓰기
             return "MySQL로부터 데이터를 성공적으로 삽입했습니다!";
         } catch (Exception e) {
@@ -50,7 +52,7 @@ public class IngredientEsSynchronizer {
             List<IngredientEs> ingredientEsList = new ArrayList<>();
 
             for (CSVRecord record : csvParser) {
-                String id = record.get("id").trim();
+                String id = record.get("ingredient_id").trim();
                 String name = record.get("name").trim();
 
                 IngredientEs ingredientEs = IngredientEs.of(id, name);

@@ -1,99 +1,64 @@
-import { useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import RecipeListTab from '../../components/recipe/RecipeListTab';
 import RecipeListContent from '../../components/recipe/RecipeListContent';
 import SearchBar from '../../components/search/SearchBar';
 import Header from '../../components/common/Header.jsx';
 import Footer from '../../components/common/Footer.jsx';
-function RecipeList() {
-  const [activeTab, setActiveTab] = useState('recommended');
-  const [searchTerm, setSearchTerm] = useState('');
+import TopButton from '../../components/common/TopButton';
+import CreateButton from '../../components/common/CreateButton';
 
-  const images = [
-    { id: 1, url: 'https://picsum.photos/400/300?random=1', title: 'Image 1' },
-    { id: 2, url: 'https://picsum.photos/400/300?random=2', title: 'Image 2' },
-    { id: 3, url: 'https://picsum.photos/400/300?random=3', title: 'Image 3' },
-    { id: 4, url: 'https://picsum.photos/400/300?random=4', title: 'Image 4' },
-    { id: 5, url: 'https://picsum.photos/400/300?random=5', title: 'Image 5' },
-    { id: 6, url: 'https://picsum.photos/400/300?random=6', title: 'Image 6' },
-    { id: 7, url: 'https://picsum.photos/400/300?random=7', title: 'Image 7' },
-    { id: 8, url: 'https://picsum.photos/400/300?random=8', title: 'Image 8' },
-    { id: 9, url: 'https://picsum.photos/400/300?random=9', title: 'Image 9' },
-    {
-      id: 10,
-      url: 'https://picsum.photos/400/300?random=10',
-      title: 'Image 10',
-    },
-    {
-      id: 11,
-      url: 'https://picsum.photos/400/300?random=11',
-      title: 'Image 11',
-    },
-    {
-      id: 12,
-      url: 'https://picsum.photos/400/300?random=12',
-      title: 'Image 12',
-    },
-    {
-      id: 13,
-      url: 'https://picsum.photos/400/300?random=13',
-      title: 'Image 13',
-    },
-    {
-      id: 14,
-      url: 'https://picsum.photos/400/300?random=14',
-      title: 'Image 14',
-    },
-    {
-      id: 15,
-      url: 'https://picsum.photos/400/300?random=15',
-      title: 'Image 15',
-    },
-    {
-      id: 16,
-      url: 'https://picsum.photos/400/300?random=16',
-      title: 'Image 16',
-    },
-    {
-      id: 17,
-      url: 'https://picsum.photos/400/300?random=17',
-      title: 'Image 17',
-    },
-    {
-      id: 18,
-      url: 'https://picsum.photos/400/300?random=18',
-      title: 'Image 18',
-    },
-    {
-      id: 19,
-      url: 'https://picsum.photos/400/300?random=19',
-      title: 'Image 19',
-    },
-    {
-      id: 20,
-      url: 'https://picsum.photos/400/300?random=20',
-      title: 'Image 20',
-    },
-  ];
+function RecipeList() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('recommended');
+  const [isTopButtonVisible, setIsTopButtonVisible] = useState(false);
+  const [searchTerm, setSearchTerm] = useState(location.state?.searchTerm || '');
+
+  const handleClearSearch = () => {
+    setSearchTerm('');
+  };
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsTopButtonVisible(window.scrollY > 100);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const handleCreateClick = () => {
+    alert('글 생성 버튼이 클릭되었습니다!');
+  };
 
   return (
-    <div className="bg-white shadow-md mx-auto w-[375px] min-h-screen">
+    <div className="bg-white shadow-md mx-auto w-[375px] min-h-screen relative">
       <Header />
       <div className="px-4 space-y-4">
         <RecipeListTab activeTab={activeTab} setActiveTab={setActiveTab} />
         <div className="flex justify-center">
           <SearchBar
+            searchPath={'/recipe/search'}
             searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
+            onClear={handleClearSearch}
             className="w-[200px]"
           />
         </div>
-        <RecipeListContent
-          activeTab={activeTab}
-          images={images}
-          searchTerm={searchTerm}
-        />
+        <RecipeListContent activeTab={activeTab} searchTerm={searchTerm} />
       </div>
       <Footer />
+      <CreateButton
+        onClick={handleCreateClick}
+        isTopButtonVisible={isTopButtonVisible}
+        basePositionClass="bottom-10 right-[calc((100vw-375px)/2+16px)]"
+      />
+      {isTopButtonVisible && (
+        <TopButton
+          offset={100}
+          positionClass="bottom-10 right-[calc((100vw-375px)/2+16px)]"
+        />
+      )}
     </div>
   );
 }

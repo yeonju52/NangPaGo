@@ -8,9 +8,8 @@ import co.elastic.clients.elasticsearch.core.SearchResponse;
 import com.mars.NangPaGo.domain.ingredient.dto.IngredientEsResponseDto;
 import com.mars.NangPaGo.domain.ingredient.entity.IngredientEs;
 import java.io.IOException;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,6 +43,8 @@ public class IngredientEsService {
                         .fields("name.ngram", f -> f)
                         .preTags("<em>").postTags("</em>")
                     )
+//                    .from(0)  // 필요시 추가. (0: 첫번째 페이지)
+//                    .size(10) // 필요시 추가. (10: 10개 항목만 반환)
                     .sort(so -> so
                         .field(f -> f
                             .field("_score")
@@ -57,16 +58,14 @@ public class IngredientEsService {
                 .map(hit -> {
                     IngredientEs source = hit.source();
                     double matchScore = hit.score();
-
-                    Map<String, List<String>> highlightFields = hit.highlight();
-                    List<String> highlightNames = highlightFields != null ? highlightFields.get("name.ngram") : null;
-
-                    String highlightedName = (highlightNames != null && !highlightNames.isEmpty())
-                        ? highlightNames.get(0) : source.getName();
+                    String highlightedName = Optional.ofNullable(hit.highlight())
+                        .map(highlightFields -> highlightFields.get("name.ngram"))
+                        .filter(highlightList -> !highlightList.isEmpty())
+                        .map(highlightList -> highlightList.get(0))
+                        .orElse(source.getName());
 
                     return IngredientEsResponseDto.of(source, highlightedName, matchScore);
                 })
-                .sorted(Comparator.comparingDouble(IngredientEsResponseDto::matchScore).reversed())
                 .collect(Collectors.toList());
 
         } catch (IOException e) {

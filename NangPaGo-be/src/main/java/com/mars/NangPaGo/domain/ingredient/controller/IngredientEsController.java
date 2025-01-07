@@ -12,13 +12,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
-@RequiredArgsConstructor
 @Tag(name = "재료사전 API", description = "재료사전 관련 API")
+@RequiredArgsConstructor
 @RequestMapping("/api/ingredient")
 @RestController
 public class IngredientEsController {
+
     private final IngredientEsSynchronizer ingredientEsSynchronizer;
     private final IngredientEsService ingredientEsService;
 
@@ -28,7 +28,8 @@ public class IngredientEsController {
     }
 
     @GetMapping("/search")
-    public ResponseDto<List<IngredientEsResponseDto>> searchByPrefix(@RequestParam("keyword") String keyword) {
+    public ResponseDto<List<IngredientEsResponseDto>> searchIngredient(
+        @RequestParam(value = "keyword", required = false, defaultValue = "") String keyword) {
         return ResponseDto.of(ingredientEsService.searchIngredients(keyword));
     }
 }
