@@ -3,6 +3,7 @@ package com.mars.NangPaGo.domain.recipe.controller;
 import com.mars.NangPaGo.common.dto.ResponseDto;
 import com.mars.NangPaGo.common.aop.auth.AuthenticatedUser;
 import com.mars.NangPaGo.common.component.auth.AuthenticationHolder;
+import com.mars.NangPaGo.common.exception.NPGExceptionType;
 import com.mars.NangPaGo.domain.recipe.dto.RecipeEsResponseDto;
 import com.mars.NangPaGo.domain.recipe.dto.RecipeLikeResponseDto;
 import com.mars.NangPaGo.domain.recipe.dto.RecipeResponseDto;
@@ -54,8 +55,14 @@ public class RecipeController {
     public ResponseDto<Page<RecipeEsResponseDto>> searchRecipes(
         @RequestParam(name = "pageNo", defaultValue = "1") int page,
         @RequestParam(name = "pageSize", defaultValue = "10") int size,
-        @RequestParam(name = "keyword", required = false) String keyword) {
-        return ResponseDto.of(recipeEsService.searchRecipes(page, size, keyword));
+        @RequestParam(name = "keyword", required = false) String keyword,
+        @RequestParam(name = "searchType", defaultValue = "INGREDIENTS") String searchType) {
+
+        if (page < 1) {
+            throw NPGExceptionType.BAD_REQUEST_INVALID_COMMENT.of();
+        }
+
+        return ResponseDto.of(recipeEsService.searchRecipes(page - 1, size, keyword, searchType));
     }
 
     @PostMapping("/bulk-upload/mysql")
