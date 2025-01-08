@@ -26,8 +26,6 @@ function Header() {
     setDropdownOpen(!dropdownOpen);
   };
 
-  const getUsername = (email) => email.split('@')[0];
-
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -75,7 +73,7 @@ function Header() {
               >
                 <div className="absolute top-[-10px] right-[10px] w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[10px] border-b-[var(--secondary-color)]"></div>
                 <div className="px-4 py-2 text-gray-700 text-[13px]">
-                  {getUsername(loginState.email)}
+                  {loginState.nickname}
                 </div>
                 <Link
                   to="/profile"
