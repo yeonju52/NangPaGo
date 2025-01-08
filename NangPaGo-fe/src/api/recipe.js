@@ -16,3 +16,44 @@ export const getRecipes = async (ingredients, page, size) => {
     throw error;
   }
 };
+
+export const fetchRecommendedRecipes = async (
+  searchTerm,
+  pageNo = 1,
+  pageSize = 10,
+) => {
+  try {
+    const params = {
+      pageNo,
+      pageSize,
+      ...(searchTerm && { keyword: searchTerm, searchType: 'NAME' }),
+    };
+    const response = await axiosInstance.get('/api/recipe/search', { params });
+    return response.data.data.content || [];
+  } catch (error) {
+    console.error('Error fetching recommended recipes:', error);
+    return [];
+  }
+};
+
+export const fetchFavoriteRecipes = async (
+  page = 0,
+  size = 10,
+  sort = 'createdAt,desc',
+) => {
+  try {
+    const response = await axiosInstance.get('/api/recipe/favorite/list', {
+      params: { page, size, sort },
+    });
+    return response.data.data;
+  } catch (error) {
+    console.error('Error fetching favorite recipes:', error);
+    return {
+      content: [],
+      currentPage: 0,
+      totalPages: 0,
+      totalItems: 0,
+      isLast: true,
+    };
+  }
+};
