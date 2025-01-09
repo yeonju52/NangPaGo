@@ -83,9 +83,6 @@ const Modify = () => {
       <div className="flex-grow">
         <Header />
         <div className="px-6 bg-white">
-          <h3 className="text-xl font-bold mb-6 text-gray-800 text-center">
-            회원정보 수정
-          </h3>
           <div>
             <div className="mb-4">
               <label className="block text-gray-500 mb-2">닉네임</label>
@@ -98,11 +95,11 @@ const Modify = () => {
                     setIsNicknameAvailable(false);
                     setIsNicknameAvailableMessage('');
                   }}
-                  className="flex-1 p-2 border border-gray-300 rounded"
+                  className="w-full p-2 border border-gray-300 rounded"
                 />
                 <button
                   onClick={handleNicknameCheck}
-                  className="bg-yellow-400 text-white px-4 py-2 rounded whitespace-nowrap"
+                  className="bg-yellow-400 text-white px-3 py-2 rounded whitespace-nowrap flex-shrink-0"
                 >
                   중복 확인
                 </button>
