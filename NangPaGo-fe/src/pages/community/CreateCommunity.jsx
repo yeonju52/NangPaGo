@@ -74,8 +74,11 @@ function CreateCommunity() {
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder="내용을 입력해 주세요."
-          rows={6}
+          rows={11}
         />
+        <div className="text-gray-700 text-sm whitespace-pre-wrap my-4">
+          {content}
+        </div>
         <div className="flex items-center mb-4">
           <input
             type="checkbox"
