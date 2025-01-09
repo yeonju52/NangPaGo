@@ -3,7 +3,12 @@ package com.mars.NangPaGo.domain.user.controller;
 
 import com.mars.NangPaGo.common.aop.auth.AuthenticatedUser;
 import com.mars.NangPaGo.common.component.auth.AuthenticationHolder;
+import com.mars.NangPaGo.common.dto.PageDto;
 import com.mars.NangPaGo.common.dto.ResponseDto;
+import com.mars.NangPaGo.common.exception.NPGExceptionType;
+import com.mars.NangPaGo.domain.comment.recipe.dto.RecipeCommentResponseDto;
+import com.mars.NangPaGo.domain.favorite.recipe.dto.RecipeFavoriteListResponseDto;
+import com.mars.NangPaGo.domain.recipe.dto.RecipeResponseDto;
 import com.mars.NangPaGo.domain.user.dto.MyPageDto;
 import com.mars.NangPaGo.domain.user.dto.UserInfoRequestDto;
 import com.mars.NangPaGo.domain.user.dto.UserInfoResponseDto;
@@ -12,7 +17,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -47,7 +51,7 @@ public class UserController {
     @AuthenticatedUser
     @GetMapping("/profile/check")
     public ResponseDto<Boolean> checkNickname(@RequestParam String nickname) {
-        return ResponseDto.of(userService.usableNickname(nickname));
+        return ResponseDto.of(userService.isNicknameAvailable(nickname));
     }
 
     @AuthenticatedUser
@@ -55,5 +59,55 @@ public class UserController {
     public ResponseDto<UserInfoResponseDto> updateUserInfo(@RequestBody UserInfoRequestDto requestDto) {
         String email = AuthenticationHolder.getCurrentUserEmail();
         return ResponseDto.of(userService.updateUserInfo(requestDto, email));
+    }
+
+    @GetMapping("/likes/recipes")
+    public ResponseDto<PageDto<RecipeResponseDto>> getMyLikedRecipes(
+        @RequestParam(defaultValue = "0") int pageNo,
+        @RequestParam(defaultValue = "7") int pageSize
+    ) {
+        if (pageNo < 1) {
+            throw NPGExceptionType.BAD_REQUEST_INVALID_PAGE_NO.of();
+        }
+        if (pageSize < 1) {
+            throw NPGExceptionType.BAD_REQUEST_INVALID_PAGE_SIZE.of();
+        }
+
+        String email = AuthenticationHolder.getCurrentUserEmail();
+        return ResponseDto.of(userService.getMyLikedRecipes(email, pageNo - 1, pageSize));
+    }
+
+    @AuthenticatedUser
+    @GetMapping("/favorites/recipes")
+    public ResponseDto<PageDto<RecipeFavoriteListResponseDto>> getMyFavorites(
+        @RequestParam(defaultValue = "0") int pageNo,
+        @RequestParam(defaultValue = "7") int pageSize
+    ) {
+        if (pageNo < 1) {
+            throw NPGExceptionType.BAD_REQUEST_INVALID_PAGE_NO.of();
+        }
+        if (pageSize < 1) {
+            throw NPGExceptionType.BAD_REQUEST_INVALID_PAGE_SIZE.of();
+        }
+
+        String email = AuthenticationHolder.getCurrentUserEmail();
+        return ResponseDto.of(userService.getMyFavorites(email, pageNo - 1, pageSize));
+    }
+
+    @AuthenticatedUser
+    @GetMapping("/comments")
+    public ResponseDto<PageDto<RecipeCommentResponseDto>> getMyComments(
+        @RequestParam(defaultValue = "0") int pageNo,
+        @RequestParam(defaultValue = "7") int pageSize
+    ) {
+        if (pageNo < 1) {
+            throw NPGExceptionType.BAD_REQUEST_INVALID_PAGE_NO.of();
+        }
+        if (pageSize < 1) {
+            throw NPGExceptionType.BAD_REQUEST_INVALID_PAGE_SIZE.of();
+        }
+
+        String email = AuthenticationHolder.getCurrentUserEmail();
+        return ResponseDto.of(userService.getMyComments(email, pageNo - 1, pageSize));
     }
 }

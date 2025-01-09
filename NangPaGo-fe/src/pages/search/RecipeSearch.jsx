@@ -1,49 +1,65 @@
-import { useState } from 'react';
-import { BiSearch, BiArrowBack } from 'react-icons/bi';
+import { useState, useEffect } from 'react';
+import { BiSearch, BiArrowBack, BiX } from 'react-icons/bi';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import NoResult from '../../components/search/NoResult';
 import EmptyState from '../../components/search/EmptyState';
+import { parseHighlightedName } from '../../components/util/stringUtil';
+import useDebounce from '../../hooks/useDebounce';
 
 function RecipeSearch() {
   const navigate = useNavigate();
   const location = useLocation();
   const [keyword, setKeyword] = useState(location.state?.searchTerm || '');
   const [results, setResults] = useState([]);
+  const debouncedKeyword = useDebounce(keyword, 500);
 
-  const handleChange = async (e) => {
-    const newKeyword = e.target.value;
-    setKeyword(newKeyword);
-
-    if (!newKeyword.trim()) {
-      setResults([]);
-      return;
-    }
-
-    try {
-      const response = await axios.get('/api/recipe/search', {
-        params: { 
-          pageNo: 1,
-          pageSize: 10,
-          keyword: newKeyword,
-          searchType: 'NAME',
-        },
-      });
-      setResults(response.data.data.content);
-    } catch (error) {
-      console.error('레시피 검색 요청 실패:', error);
-      setResults([]);
-    }
+  const handleChange = (e) => {
+    setKeyword(e.target.value);
   };
 
+  const clearKeyword = (e) => {
+    e.stopPropagation();
+    setKeyword('');
+  };
+
+  useEffect(() => {
+    const searchRecipes = async () => {
+      if (!debouncedKeyword.trim()) {
+        setResults([]);
+        return;
+      }
+
+      try {
+        const response = await axios.get('/api/recipe/search', {
+          params: {
+            pageNo: 1,
+            pageSize: 10,
+            keyword: debouncedKeyword,
+            searchType: 'NAME',
+          },
+        });
+        setResults(response.data.data.content);
+      } catch (error) {
+        console.error('레시피 검색 요청 실패:', error);
+        setResults([]);
+      }
+    };
+
+    searchRecipes();
+  }, [debouncedKeyword]);
+
   const handleResultClick = (recipe) => {
-    navigate(`/recipe/${recipe.id}`);
+    setKeyword(recipe.name);
+    navigate('/', {
+      state: { searchTerm: recipe.name },
+    });
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     navigate('/', {
-      state: { searchTerm: keyword }
+      state: { searchTerm: keyword },
     });
   };
 
@@ -68,12 +84,14 @@ function RecipeSearch() {
                      focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)] 
                      focus:border-transparent placeholder-gray-500"
           />
-          <button
-            type="submit"
-            className="absolute right-3 top-1/2 transform -translate-y-1/2"
-          >
-            <BiSearch className="text-[var(--secondary-color)] text-xl" />
-          </button>
+          {keyword ? (
+            <BiX
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[var(--secondary-color)] text-3xl cursor-pointer"
+              onClick={clearKeyword}
+            />
+          ) : (
+            <BiSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[var(--secondary-color)] text-2xl" />
+          )}
         </form>
       </div>
 
@@ -87,7 +105,9 @@ function RecipeSearch() {
                   onClick={() => handleResultClick(recipe)}
                   className="p-3 rounded-lg cursor-pointer hover:bg-gray-50"
                 >
-                  <span className="text-black">{recipe.name}</span>
+                  <span className="text-black">
+                    {parseHighlightedName(recipe.highlightedName)}
+                  </span>
                 </div>
               ))}
             </div>

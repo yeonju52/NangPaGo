@@ -3,9 +3,9 @@ import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../../slices/loginSlice';
 import axiosInstance from '../../api/axiosInstance';
 import { FaRegUser } from 'react-icons/fa';
-import { IoReceiptOutline } from 'react-icons/io5';
 import { CgSmartHomeRefrigerator } from 'react-icons/cg';
 import { useState, useRef, useEffect } from 'react';
+import { BsFilePost } from 'react-icons/bs';
 
 function Header() {
   const loginState = useSelector((state) => state.loginSlice);
@@ -26,9 +26,6 @@ function Header() {
     setDropdownOpen(!dropdownOpen);
   };
 
-  const getUsername = (email) => email.split('@')[0];
-
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -42,7 +39,7 @@ function Header() {
   }, []);
 
   if (!loginState.isInitialized) {
-    return null; // 초기화 중에는 렌더링하지 않음
+    return null;
   }
 
   return (
@@ -54,8 +51,8 @@ function Header() {
 
         {loginState.isLoggedIn ? (
           <div className="flex items-center space-x-7">
-            <Link to="/recipes" className="text-[var(--primary-color)]">
-              <IoReceiptOutline size={26} />
+            <Link to="/community" className="text-[var(--primary-color)]">
+              <BsFilePost size={26} />
             </Link>
             <Link to="/refrigerator" className="text-[var(--primary-color)]">
               <CgSmartHomeRefrigerator size={28} />
@@ -76,10 +73,10 @@ function Header() {
               >
                 <div className="absolute top-[-10px] right-[10px] w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[10px] border-b-[var(--secondary-color)]"></div>
                 <div className="px-4 py-2 text-gray-700 text-[13px]">
-                  {getUsername(loginState.email)}
+                  {loginState.nickname}
                 </div>
                 <Link
-                  to="/profile"
+                  to="/my-page"
                   className="block px-4 py-2 text-gray-700 hover:bg-gray-100 text-[13px]"
                 >
                   마이페이지

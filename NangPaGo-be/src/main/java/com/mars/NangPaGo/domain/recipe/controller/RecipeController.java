@@ -14,6 +14,7 @@ import com.mars.NangPaGo.domain.recipe.service.RecipeService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -51,18 +52,26 @@ public class RecipeController {
         return ResponseDto.of(recipeLikeService.toggleLike(id, email));
     }
 
+    @GetMapping("/{id}/like/count")
+    public ResponseDto<Integer> getLikeCount(@PathVariable Long id) {
+        return ResponseDto.of(recipeLikeService.getLikeCount(id));
+    }
+
     @GetMapping("/search")
     public ResponseDto<Page<RecipeEsResponseDto>> searchRecipes(
-        @RequestParam(name = "pageNo", defaultValue = "1") int page,
-        @RequestParam(name = "pageSize", defaultValue = "10") int size,
+        @RequestParam(name = "pageNo", defaultValue = "1") int pageNo,
+        @RequestParam(name = "pageSize", defaultValue = "10") int pageSize,
         @RequestParam(name = "keyword", required = false) String keyword,
         @RequestParam(name = "searchType", defaultValue = "INGREDIENTS") String searchType) {
 
-        if (page < 1) {
-            throw NPGExceptionType.BAD_REQUEST_INVALID_COMMENT.of();
+        if (pageNo < 1) {
+            throw NPGExceptionType.BAD_REQUEST_INVALID_PAGE_NO.of();
+        }
+        if (pageSize < 1) {
+            throw NPGExceptionType.BAD_REQUEST_INVALID_PAGE_SIZE.of();
         }
 
-        return ResponseDto.of(recipeEsService.searchRecipes(page - 1, size, keyword, searchType));
+        return ResponseDto.of(recipeEsService.searchRecipes(pageNo - 1, pageSize, keyword, searchType));
     }
 
     @PostMapping("/bulk-upload/mysql")

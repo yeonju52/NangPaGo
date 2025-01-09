@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { BiSearch, BiArrowBack } from 'react-icons/bi';
+import { useState, useEffect } from 'react';
+import { BiSearch, BiArrowBack, BiX } from 'react-icons/bi';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
@@ -10,6 +10,7 @@ import { addIngredient } from '../../api/refrigerator';
 import SearchResult from '../../components/search/SearchResult';
 import NoResult from '../../components/search/NoResult';
 import EmptyState from '../../components/search/EmptyState';
+import useDebounce from '../../hooks/useDebounce';
 
 function RefrigeratorSearch() {
   const navigate = useNavigate();
@@ -17,38 +18,51 @@ function RefrigeratorSearch() {
   const [results, setResults] = useState([]);
   const [existingIngredientMessage, setExistingIngredientMessage] =
     useState('');
+  const debouncedKeyword = useDebounce(keyword, 500);
 
-  const handleChange = async (e) => {
+  const handleChange = (e) => {
     const newKeyword = e.target.value;
     setKeyword(newKeyword);
     setExistingIngredientMessage('');
-
-    if (!newKeyword.trim()) {
-      setResults([]);
-      return;
-    }
-
-    try {
-      const response = await axios.get('/api/ingredient/search', {
-        params: { keyword: newKeyword },
-      });
-      const { data } = response.data;
-      setResults(data);
-    } catch (error) {
-      console.error('검색 요청 실패:', error);
-      setResults([]);
-    }
   };
+
+  useEffect(() => {
+    const searchIngredients = async () => {
+      if (!debouncedKeyword.trim()) {
+        setResults([]);
+        return;
+      }
+
+      try {
+        const response = await axios.get('/api/ingredient/search', {
+          params: { keyword: debouncedKeyword },
+        });
+        const { data } = response.data;
+        setResults(data);
+      } catch (error) {
+        console.error('검색 요청 실패:', error);
+        setResults([]);
+      }
+    };
+
+    searchIngredients();
+  }, [debouncedKeyword]);
 
   const handleResultClick = async (highlightedName) => {
     const rawName = stripHtmlTags(highlightedName);
     try {
-      const ingredient = await addIngredient(rawName); // 변수명 변경
+      const ingredient = await addIngredient(rawName);
       navigate('/refrigerator');
     } catch (error) {
       setExistingIngredientMessage(`${rawName} 이미 추가되어 있습니다.`);
       setKeyword('');
     }
+  };
+
+  const clearKeyword = (e) => {
+    e.stopPropagation();
+    setKeyword('');
+    setExistingIngredientMessage('');
   };
 
   return (
@@ -72,7 +86,20 @@ function RefrigeratorSearch() {
                        focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]
                        focus:border-transparent placeholder-gray-500"
           />
-          <BiSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[var(--secondary-color)] text-xl" />
+          {keyword ? (
+            <BiX
+              className="absolute right-3 top-1/2
+                        transform -translate-y-1/2
+                        text-[var(--secondary-color)]
+                        cursor-pointer text-3xl"
+              onClick={clearKeyword}
+            />
+          ) : (
+            <BiSearch
+              className="absolute right-3 top-1/2 transform
+                         -translate-y-1/2 cursor-pointer
+                         text-[var(--secondary-color)] text-2xl" />
+          )}
         </div>
       </div>
 
