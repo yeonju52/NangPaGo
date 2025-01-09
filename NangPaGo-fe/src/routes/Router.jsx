@@ -8,6 +8,8 @@ import Refrigerator from '../pages/refrigerator/Refrigerator.jsx';
 import RefrigeratorSearch from '../pages/search/RefrigeratorSearch.jsx';
 import CommunityList from '../pages/community/CommunityList.jsx';
 import CommunityDetail from '../pages/community/CommunityDetail';
+import CreateCommunity from '../pages/community/CreateCommunity.jsx';
+import ModifyCommunity from '../pages/community/ModifyCommunity.jsx';
 
 const router = createBrowserRouter([
   {
@@ -62,6 +64,14 @@ const router = createBrowserRouter([
       {
         path: ':id',
         element: <CommunityDetail />,
+      },
+      {
+        path: 'new',
+        element: <CreateCommunity />,
+      },
+      {
+        path: ':id/modify',
+        element: <ModifyCommunity />,
       },
     ],
   },

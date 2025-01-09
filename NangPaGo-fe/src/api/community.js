@@ -8,9 +8,27 @@ export const fetchCommunityList = (pageNo = 0, pageSize = 10) => {
     .then((response) => response.data);
 };
 
-export const createCommunity = (data) => {
+export const getCommunityDetail = async (id) => {
   return axiosInstance
-    .post('/api/community', data)
+    .get(`/api/community/${id}`)
+    .then((response) => response.data)
+    .catch((error) => {
+      console.error('Error fetching community details:', error);
+      throw error;
+    });
+};
+
+export const createCommunity = (data, file) => {
+  const formData = new FormData();
+  formData.append('title', data.title);
+  formData.append('content', data.content);
+  formData.append('isPublic', data.isPublic);
+  if (file) formData.append('file', file);
+
+  return axiosInstance
+    .post('/api/community', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
     .then((response) => response.data);
 };
 
@@ -20,7 +38,6 @@ export const updateCommunity = (id, data) => {
     .then((response) => response.data);
 };
 
-// 게시물 삭제
 export const deleteCommunity = (id) => {
   return axiosInstance
     .delete(`/api/community/${id}`)
@@ -29,9 +46,7 @@ export const deleteCommunity = (id) => {
 
 export const getLikeCount = async (id) => {
   try {
-    const response = await axiosInstance.get(
-      `/api/community/${id}/like/count`,
-    );
+    const response = await axiosInstance.get(`/api/community/${id}/like/count`);
     return response.data.data;
   } catch (error) {
     console.error('좋아요 수를 가져오는 중 오류가 발생했습니다:', error);

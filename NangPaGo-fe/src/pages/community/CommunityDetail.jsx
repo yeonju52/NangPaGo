@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { useSelector } from 'react-redux'; // Redux 상태 가져오기
+import { useSelector } from 'react-redux';
 import axiosInstance from '../../api/axiosInstance';
 import Community from '../../components/community/Community';
 
@@ -10,8 +10,8 @@ function CommunityDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const email = useSelector((state) => state.loginSlice.email);
-  const isLoggedIn = Boolean(email);
+  const nickname = useSelector((state) => state.loginSlice.nickname);
+  const isLoggedIn = Boolean(nickname);
 
   useEffect(() => {
     const fetchCommunity = async () => {
