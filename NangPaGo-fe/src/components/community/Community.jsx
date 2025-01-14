@@ -5,6 +5,7 @@ import CommunityComment from './comment/CommunityComment';
 import Header from '../common/Header';
 import Footer from '../common/Footer';
 import CreateButton from '../common/CreateButton';
+import { styles } from '../common/Image'
 import {
   getLikeCount,
   getLikeStatus,
@@ -89,7 +90,7 @@ function Community({ community }) {
           <img
             src={community.imageUrl}
             alt={community.title}
-            className="w-full h-48 object-cover rounded-md"
+            className={styles.mainImage}
           />
         </div>
 
