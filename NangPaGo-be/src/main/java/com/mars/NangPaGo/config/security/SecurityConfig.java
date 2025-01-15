@@ -6,6 +6,7 @@ import com.mars.NangPaGo.auth.handler.OAuth2SuccessHandler;
 import com.mars.NangPaGo.auth.service.OAuth2LogoutService;
 import com.mars.NangPaGo.auth.service.OAuth2UserService;
 import com.mars.NangPaGo.auth.filter.JwtAuthenticationFilter;
+import com.mars.NangPaGo.auth.vo.OAuth2RequestResolver;
 import com.mars.NangPaGo.common.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,6 +16,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.LogoutFilter;
@@ -53,7 +56,11 @@ public class SecurityConfig {
     private final OAuth2LogoutService oauth2LogoutService;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, ClientRegistrationRepository clientRegistrationRepository) throws Exception {
+
+        OAuth2AuthorizationRequestResolver customResolver =
+            new OAuth2RequestResolver(clientRegistrationRepository, "/api/oauth2/authorization");
+
         return http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(AbstractHttpConfigurer::disable)
@@ -69,7 +76,8 @@ public class SecurityConfig {
             )
             .oauth2Login(oauth2 -> oauth2
                 .authorizationEndpoint(authorization ->
-                    authorization.baseUri("/api/oauth2/authorization")
+                    authorization
+                        .authorizationRequestResolver(customResolver)
                 )
                 .loginProcessingUrl("/api/login/oauth2/code/*")
                 .userInfoEndpoint(userInfoEndpointConfig ->

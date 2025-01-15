@@ -5,6 +5,7 @@ import com.mars.NangPaGo.common.aop.auth.AuthenticatedUser;
 import com.mars.NangPaGo.common.component.auth.AuthenticationHolder;
 import com.mars.NangPaGo.common.dto.PageDto;
 import com.mars.NangPaGo.common.dto.ResponseDto;
+import com.mars.NangPaGo.domain.auth.service.OAuth2ProviderTokenService;
 import com.mars.NangPaGo.common.exception.NPGExceptionType;
 import com.mars.NangPaGo.domain.comment.recipe.dto.RecipeCommentResponseDto;
 import com.mars.NangPaGo.domain.favorite.recipe.dto.RecipeFavoriteListResponseDto;
@@ -15,6 +16,7 @@ import com.mars.NangPaGo.domain.user.dto.UserInfoResponseDto;
 import com.mars.NangPaGo.domain.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -30,6 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
 
     private final UserService userService;
+    private final OAuth2ProviderTokenService oauth2ProviderTokenService;
 
     @Operation(summary = "마이페이지 조회")
     @AuthenticatedUser
@@ -109,5 +112,13 @@ public class UserController {
 
         String email = AuthenticationHolder.getCurrentUserEmail();
         return ResponseDto.of(userService.getMyComments(email, pageNo - 1, pageSize));
+    }
+
+    @AuthenticatedUser
+    @GetMapping("/deactivate")
+    public ResponseDto<String> deactivateUser() throws IOException, InterruptedException {
+        String email = AuthenticationHolder.getCurrentUserEmail();
+        oauth2ProviderTokenService.deactivateUser(email);
+        return ResponseDto.of("");
     }
 }

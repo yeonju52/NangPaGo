@@ -7,6 +7,7 @@ import com.mars.NangPaGo.domain.favorite.recipe.entity.RecipeFavorite;
 import com.mars.NangPaGo.domain.recipe.entity.RecipeLike;
 import com.mars.NangPaGo.domain.user.dto.UserInfoRequestDto;
 import com.mars.NangPaGo.domain.user.enums.Gender;
+import com.mars.NangPaGo.domain.user.enums.UserStatus;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -16,6 +17,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
+import java.time.LocalDate;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -48,6 +50,11 @@ public class User extends BaseEntity {
     private OAuth2Provider oauth2Provider;
     private String providerId;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name="user_status")
+    private UserStatus userStatus;
+    private LocalDate leftAt;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RecipeComment> comments;
 
@@ -60,5 +67,10 @@ public class User extends BaseEntity {
     public User updateNickname(UserInfoRequestDto requestDto) {
         this.nickname = requestDto.nickname();
         return this;
+    }
+
+    public void softDelete(){
+        this.userStatus = UserStatus.from("탈퇴");
+        this.leftAt = LocalDate.now();
     }
 }
