@@ -1,7 +1,7 @@
 import axiosInstance from './axiosInstance';
 
 export const fetchComments = (id, pageNo = 0, pageSize = 5) =>
-  axiosInstance.get(`/api/community/${id}/comments`, {
+  axiosInstance.get(`/api/community/${id}/comment`, {
     params: { pageNo, pageSize },
   });
 
