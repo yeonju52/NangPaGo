@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { AiFillHeart } from 'react-icons/ai';
 import { FaCommentAlt } from 'react-icons/fa';
+import { styles } from '../common/Image';
 
 function RecipeCard({ recipe }) {
   return (
@@ -11,16 +12,16 @@ function RecipeCard({ recipe }) {
       <img
         src={recipe.recipeImageUrl}
         alt={recipe.name}
-        className="w-full h-48 object-cover"
+        className={styles.imageList}
       />
       <div className="p-4 flex flex-col gap-2">
-        <div className="text-sm text-gray-600 flex items-center gap-4">
+        <div className="text-sm text-text-400 flex items-center gap-4">
           <div className="flex items-center gap-1">
             <AiFillHeart className="text-red-500 text-xl" />
             {recipe.likeCount}
           </div>
           <div className="flex items-center gap-1">
-            <FaCommentAlt className="text-gray-300 text-xl" />
+            <FaCommentAlt className="text-text-400 text-xl" />
             {recipe.commentCount}
           </div>
         </div>
@@ -30,7 +31,7 @@ function RecipeCard({ recipe }) {
           {recipe.ingredientsDisplayTag.map((tag, index) => (
             <span
               key={index}
-              className="bg-[var(--secondary-color)] text-black text-sm font-medium px-2 py-1 rounded"
+              className="bg-secondary text-text-900 text-sm px-2 py-1 rounded"
             >
               {tag}
             </span>

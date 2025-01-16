@@ -1,5 +1,7 @@
 package com.mars.NangPaGo.domain.community.controller;
 
+import static com.mars.NangPaGo.common.exception.NPGExceptionType.BAD_REQUEST;
+
 import com.mars.NangPaGo.common.aop.auth.AuthenticatedUser;
 import com.mars.NangPaGo.common.component.auth.AuthenticationHolder;
 import com.mars.NangPaGo.common.dto.PageDto;
@@ -12,6 +14,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.multipart.MultipartFile;
 
 @RequiredArgsConstructor
@@ -53,7 +56,7 @@ public class CommunityController {
     public ResponseDto<CommunityResponseDto> create(
         @ModelAttribute @Valid CommunityRequestDto requestDto,
         @RequestParam(value = "file", required = false) MultipartFile file
-        ) {
+    ) {
 
         String email = AuthenticationHolder.getCurrentUserEmail();
         return ResponseDto.of(communityService.createCommunity(requestDto, file, email), "게시물이 성공적으로 생성되었습니다.");

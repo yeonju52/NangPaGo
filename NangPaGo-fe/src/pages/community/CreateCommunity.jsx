@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useCallback } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { createCommunity } from '../../api/community';
 import Header from '../../components/common/Header';
 import Footer from '../../components/common/Footer';
@@ -8,9 +8,14 @@ import TextArea from '../../components/community/TextArea';
 import FileUpload from '../../components/community/FileUpload';
 import ErrorMessage from '../../components/common/ErrorMessage';
 import SubmitButton from '../../components/common/SubmitButton';
+import FileSizeErrorModal from '../../common/modal/FileSizeErrorModal';
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 function CreateCommunity() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const prevPath = sessionStorage.getItem('prevPath') || '/community';
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -18,21 +23,67 @@ function CreateCommunity() {
   const [isPublic, setIsPublic] = useState(true);
   const [error, setError] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const [showFileSizeError, setShowFileSizeError] = useState(false);
+  const [isBlocked, setIsBlocked] = useState(false);
+
+  useEffect(() => {
+    if (location.state?.from) {
+      sessionStorage.setItem('prevPath', location.state.from);
+    }
+    return () => sessionStorage.removeItem('prevPath');
+  }, [location.state?.from]);
 
   useEffect(() => {
     if (file) {
-      const objectUrl = URL.createObjectURL(file);
-      setImagePreview(objectUrl);
+      if (file.size > MAX_FILE_SIZE) {
+        setShowFileSizeError(true);
+      } else {
+        const objectUrl = URL.createObjectURL(file);
+        setImagePreview(objectUrl);
 
-      return () => URL.revokeObjectURL(objectUrl);
-    } else {
-      setImagePreview(null);
+        return () => URL.revokeObjectURL(objectUrl);
+      }
     }
   }, [file]);
 
-  const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
-  };
+  const handleFileChange = useCallback((e) => {
+    const selectedFile = e.target.files[0];
+    if (selectedFile && selectedFile !== file) {
+      setFile(selectedFile);
+      setIsBlocked(true);
+    }
+  }, [file]);
+
+  useEffect(() => {
+    const handleRefreshUnload = (e) => {
+      if (isBlocked) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    const handleBackNavigation = (e) => {
+      if (isBlocked) {
+        const confirmed = window.confirm('작성 중인 내용을 저장하지 않고 이동하시겠습니까?');
+        if (confirmed) {
+          setIsBlocked(false);
+          navigate(prevPath);
+        } else {
+          history.pushState(null, '', window.location.href);
+        }
+      }
+    };
+
+    window.addEventListener('beforeunload', handleRefreshUnload);
+    window.addEventListener('popstate', handleBackNavigation);
+
+    history.pushState(null, '', window.location.href);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleRefreshUnload);
+      window.removeEventListener('popstate', handleBackNavigation);
+    };
+  }, [isBlocked]);
 
   const handleSubmit = async () => {
     if (!title || !content) {
@@ -45,34 +96,46 @@ function CreateCommunity() {
         { title, content, isPublic },
         file,
       );
-      if (responseData.data && responseData.data.id) {
+      if (responseData.data?.id) {
+        setIsBlocked(false);
         navigate(`/community/${responseData.data.id}`);
       } else {
         setError('게시글 등록 후 ID를 가져올 수 없습니다.');
       }
     } catch (err) {
       console.error('게시글 등록 중 오류 발생:', err);
-      setError('게시글 등록 중 문제가 발생했습니다.');
+      setError(err.message);
     }
   };
 
   return (
     <div className="bg-white shadow-md mx-auto w-[375px] min-h-screen flex flex-col">
-      <Header />
+      <Header isBlocked={isBlocked} />
       <div className="flex-1 p-4">
         <TextInput
           value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          onChange={(e) => {
+            setTitle(e.target.value);
+            setIsBlocked(true);
+          }}
           placeholder="제목"
         />
         <FileUpload
           file={file}
           onChange={handleFileChange}
           imagePreview={imagePreview}
+          onCancel={() => {
+            setFile(null);
+            setImagePreview(null);
+            setIsBlocked(true);
+          }}
         />
         <TextArea
           value={content}
-          onChange={(e) => setContent(e.target.value)}
+          onChange={(e) => {
+            setContent(e.target.value);
+            setIsBlocked(true);
+          }}
           placeholder="내용을 입력해 주세요."
           rows={11}
         />
@@ -81,17 +144,24 @@ function CreateCommunity() {
             type="checkbox"
             id="is-public"
             checked={!isPublic}
-            onChange={(e) => setIsPublic(!e.target.checked)}
+            onChange={(e) => {
+              setIsPublic(!e.target.checked);
+              setIsBlocked(true);
+            }}
             className="mr-2 w-4 h-4 appearance-none border border-gray-400 rounded-sm checked:bg-yellow-500 checked:border-yellow-500"
           />
           <label htmlFor="is-public" className="text-sm text-gray-500">
-            비공개 (체크 시 로그인한 사용자만 볼 수 있습니다.)
+            비공개
           </label>
         </div>
         <ErrorMessage error={error} />
         <SubmitButton onClick={handleSubmit} label="게시글 등록" />
       </div>
       <Footer />
+      <FileSizeErrorModal
+        isOpen={showFileSizeError}
+        onClose={() => setShowFileSizeError(false)}
+      />
     </div>
   );
 }
