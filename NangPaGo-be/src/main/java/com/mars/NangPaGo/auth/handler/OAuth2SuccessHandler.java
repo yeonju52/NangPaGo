@@ -1,6 +1,7 @@
 package com.mars.NangPaGo.auth.handler;
 
-import com.mars.NangPaGo.common.exception.NPGExceptionType;
+import static com.mars.NangPaGo.common.exception.NPGExceptionType.NOT_FOUND_USER;
+
 import com.mars.NangPaGo.domain.auth.service.TokenService;
 import com.mars.NangPaGo.common.util.JwtUtil;
 import com.mars.NangPaGo.domain.user.entity.User;
@@ -52,47 +53,57 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         String provider = (String) oauth2User.getAttributes().get("provider");
         String email = oauth2User.getName();
 
-        if (isDuplicatedEmail(response, email, provider)) {
+        User user = validateUser(email);
+
+        if (isDuplicatedEmail(user, provider)) {
+            redirectToErrorPage(response, user.getOauth2Provider().name());
             return;
         }
 
         renewOauth2ProviderToken(authentication, email);
-
-        String role = getRole(authentication);
-        String access = jwtUtil.createJwt("access", email, role, jwtUtil.getAccessTokenExpireMillis());
-        String refresh = jwtUtil.createJwt("refresh", email, role, jwtUtil.getRefreshTokenExpireMillis());
-
-        tokenService.renewRefreshToken(email, refresh);
-
-        response.addCookie(createCookie("access", access, jwtUtil.getAccessTokenExpireMillis(), false));
-        response.addCookie(createCookie("refresh", refresh, jwtUtil.getRefreshTokenExpireMillis(), false));
+        issueJwtTokens(response, user, email, authentication);
         response.sendRedirect(clientHost);
     }
 
-    private boolean isDuplicatedEmail(HttpServletResponse response, String email, String provider)
-        throws IOException {
-        User user = userRepository.findByEmail(email)
-            .orElseThrow(() -> NPGExceptionType.NOT_FOUND_USER.of("사용자 검증 에러: " + email));
+    private User validateUser(String email) {
+        return userRepository.findByEmail(email)
+            .orElseThrow(() -> NOT_FOUND_USER.of("사용자 검증 에러: " + email));
+    }
 
-        if (!user.getOauth2Provider().name().equals(provider)) {
-            String existingProvider = user.getOauth2Provider().name();
-            String encodedMessage = URLEncoder.encode(existingProvider, StandardCharsets.UTF_8);
-            response.sendRedirect(clientHost + "/oauth/error?existingProvider=" + encodedMessage);
-            return true;
-        }
+    private boolean isDuplicatedEmail(User user, String provider) {
+        return user.getOauth2Provider().name().equals(provider);
+    }
 
-        return false;
+    private void redirectToErrorPage(HttpServletResponse response, String existingProvider) throws IOException {
+        String encodedMessage = URLEncoder.encode(existingProvider, StandardCharsets.UTF_8);
+        response.sendRedirect(clientHost + "/oauth/error?existingProvider=" + encodedMessage);
     }
 
     private void renewOauth2ProviderToken(Authentication authentication, String email) {
         OAuth2AuthorizedClient authorizedClient = getOAuth2AuthorizedClient(authentication);
-        if (authorizedClient != null && authorizedClient.getRefreshToken() != null) {
-            // 구글은 최초 로그인에만 가져와짐
+        if (validateAuthorizedClient(authorizedClient)) {
             String refreshToken = authorizedClient.getRefreshToken().getTokenValue();
             String clientName = authorizedClient.getClientRegistration().getClientName();
 
             oauth2ProviderTokenService.renewOauth2ProviderToken(clientName, refreshToken, email);
         }
+    }
+
+    private boolean validateAuthorizedClient(OAuth2AuthorizedClient authorizedClient) {
+        return authorizedClient != null && authorizedClient.getRefreshToken() != null;
+    }
+
+    private void issueJwtTokens(HttpServletResponse response, User user, String email, Authentication authentication) {
+        Long userId = user.getId();
+        String role = getRole(authentication);
+
+        String access = jwtUtil.createJwt("access", userId, email, role, jwtUtil.getAccessTokenExpireMillis());
+        String refresh = jwtUtil.createJwt("refresh", userId, email, role, jwtUtil.getRefreshTokenExpireMillis());
+
+        tokenService.renewRefreshToken(email, refresh);
+
+        response.addCookie(createCookie("access", access, jwtUtil.getAccessTokenExpireMillis(), false));
+        response.addCookie(createCookie("refresh", refresh, jwtUtil.getRefreshTokenExpireMillis(), false));
     }
 
     private String getRole(Authentication authentication) {
@@ -107,12 +118,11 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         OAuth2AuthenticationToken oauth2Token = (OAuth2AuthenticationToken) authentication;
         String clientRegistrationId = oauth2Token.getAuthorizedClientRegistrationId();
 
-        OAuth2AuthorizedClient authorizedClient = OAuth2AuthorizedClientManager.authorize(
+        return OAuth2AuthorizedClientManager.authorize(
             OAuth2AuthorizeRequest.withClientRegistrationId(clientRegistrationId)
                 .principal(authentication)
                 .build()
         );
-        return authorizedClient;
     }
 
     private Cookie createCookie(String key, String value, long expireMillis, boolean httpOnly) {
