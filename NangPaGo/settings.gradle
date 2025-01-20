@@ -1,3 +1,5 @@
 rootProject.name = 'NangPaGo'
 
 include 'NangPaGo-app'
+include 'NangPaGo-admin'
+include 'NangPaGo-common'
