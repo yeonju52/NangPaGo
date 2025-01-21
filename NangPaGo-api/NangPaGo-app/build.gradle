@@ -1,0 +1,35 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.4.0'
+    id 'io.spring.dependency-management' version '1.1.6'
+}
+
+ext {
+    set('snippetsDir', file("build/generated-snippets"))
+}
+
+dependencies {
+    implementation project(':NangPaGo-common')
+
+    // Spring Boot
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+    implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch:3.4.0'
+
+    // External Libraries
+    implementation 'co.elastic.clients:elasticsearch-java:8.15.4'
+
+    // Firebase
+    implementation 'com.google.firebase:firebase-admin:9.2.0'
+}
+
+springBoot {
+    buildInfo()
+}
+
+bootJar {
+    enabled = true
+}
+
+jar {
+    enabled = false
+}

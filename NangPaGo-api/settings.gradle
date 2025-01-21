@@ -1,0 +1,5 @@
+rootProject.name = 'NangPaGo-api'
+
+include 'NangPaGo-app'
+include 'NangPaGo-admin'
+include 'NangPaGo-common'
