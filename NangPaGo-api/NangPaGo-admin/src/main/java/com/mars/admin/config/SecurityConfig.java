@@ -30,6 +30,7 @@ public class SecurityConfig {
     private String clientHost;
 
     private static final String[] WHITE_LIST = {
+        "/api/auth/reissue",
         "/swagger-ui/**",
         "/swagger-ui.html",
         "/api-docs/**",
