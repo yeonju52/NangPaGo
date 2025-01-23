@@ -1,14 +1,12 @@
 import { createBrowserRouter } from 'react-router-dom';
-import RecipeList from '../pages/recipe/RecipeList.jsx';
 import Login from '../pages/login/Login.jsx';
 import RecipeSearch from '../pages/search/RecipeSearch.jsx';
-import RecipeDetail from '../pages/recipe/RecipeDetail';
+import DetailPage from '../pages/common/DetailPage';
 import Modify from '../pages/profile/Modify.jsx';
 import Refrigerator from '../pages/refrigerator/Refrigerator.jsx';
 import RefrigeratorSearch from '../pages/search/RefrigeratorSearch.jsx';
 import Profile from '../pages/profile/Profile.jsx';
-import CommunityList from '../pages/community/CommunityList.jsx';
-import CommunityDetail from '../pages/community/CommunityDetail';
+import ListPage from '../pages/common/ListPage.jsx';
 import CreateCommunity from '../pages/community/CreateCommunity.jsx';
 import ModifyCommunity from '../pages/community/ModifyCommunity.jsx';
 import Error from '../pages/error/Error.jsx';
@@ -19,7 +17,7 @@ import NotFound from '../pages/error/NotFound';
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <RecipeList />,
+    element: <ListPage type="recipe" />,
   },
   {
     path: '/login',
@@ -42,7 +40,7 @@ const router = createBrowserRouter([
       },
       {
         path: ':id',
-        element: <RecipeDetail />,
+        element: <DetailPage type="recipe" />,
       },
     ],
   },
@@ -68,11 +66,11 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <CommunityList />,
+        element: <ListPage type="community" />,
       },
       {
         path: ':id',
-        element: <CommunityDetail />,
+        element: <DetailPage type="community" />,
       },
       {
         path: 'new',

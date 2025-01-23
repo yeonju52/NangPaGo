@@ -2,13 +2,13 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { createCommunity } from '../../api/community';
 import Header from '../../components/layout/header/Header';
-import Footer from '../../components/common/Footer';
+import Footer from '../../components/layout/Footer';
 import TextInput from '../../components/community/TextInput';
 import TextArea from '../../components/community/TextArea';
 import FileUpload from '../../components/community/FileUpload';
-import ErrorMessage from '../../components/common/ErrorMessage';
-import SubmitButton from '../../components/common/SubmitButton';
-import FileSizeErrorModal from '../../common/modal/FileSizeErrorModal';
+import { ERROR_STYLES } from '../../common/styles/ErrorMessage';
+import SubmitButton from '../../components/button/SubmitButton';
+import FileSizeErrorModal from '../../components/modal/FileSizeErrorModal';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
@@ -160,7 +160,7 @@ function CreateCommunity() {
             비공개
           </label>
         </div>
-        <ErrorMessage error={error} />
+        <p className={ERROR_STYLES.community}>{error}</p>
         <SubmitButton onClick={handleSubmit} label="게시글 등록" />
       </div>
       <Footer />

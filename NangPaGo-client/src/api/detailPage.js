@@ -1,9 +1,9 @@
 import axiosInstance from './axiosInstance';
 import { PAGE_INDEX, PAGE_SIZE } from '../common/constants/pagination'
 
-export const fetchRecipeById = async (recipeId) => {
+export const fetchDetailById = async (entityType, entityId) => {
   try {
-    const response = await axiosInstance.get(`/api/recipe/${recipeId}`);
+    const response = await axiosInstance.get(`/api/${entityType}/${entityId}`);
     return response.data.data;
   } catch (error) {
     console.error('레시피를 가져오는 중 오류가 발생했습니다:', error);
@@ -11,10 +11,10 @@ export const fetchRecipeById = async (recipeId) => {
   }
 };
 
-export const getRecipes = async (ingredients, page, size) => {
+export const getDetails = async (ingredients, page, size) => {
   try {
     const keyword = ingredients.join(' ');
-    const response = await axiosInstance.get('/api/recipe/search', {
+    const response = await axiosInstance.get('/api/${entityType}/search', {
       params: { pageNo: page, pageSize: size, keyword },
     });
     return response.data.data;
@@ -24,14 +24,14 @@ export const getRecipes = async (ingredients, page, size) => {
   }
 };
 
-export const searchRecipes = async (
+export const searchDetails = async (
   keyword,
   pageNo = PAGE_INDEX.one,
   pageSize = PAGE_SIZE.search,
   searchType = 'NAME',
 ) => {
   try {
-    const response = await axiosInstance.get('/api/recipe/search', {
+    const response = await axiosInstance.get('/api/${entityType}/search', {
       params: { pageNo, pageSize, keyword, searchType },
     });
     return response.data.data.content;
@@ -41,7 +41,7 @@ export const searchRecipes = async (
   }
 };
 
-export const fetchRecommendedRecipes = async (
+export const fetchRecommendedDetails = async (
   searchTerm,
   pageNo = PAGE_INDEX.one,
   pageSize = PAGE_SIZE.list,
@@ -52,7 +52,7 @@ export const fetchRecommendedRecipes = async (
       pageSize,
       ...(searchTerm && { keyword: searchTerm, searchType: 'NAME' }),
     };
-    const response = await axiosInstance.get('/api/recipe/search', { params });
+    const response = await axiosInstance.get('/api/${entityType}/search', { params });
 
     const { content, last, number } = response.data.data;
     return { content: content || [], last, number };
@@ -62,13 +62,13 @@ export const fetchRecommendedRecipes = async (
   }
 };
 
-export const fetchFavoriteRecipes = async (page, size) => {
+export const fetchFavoriteDetails = async (page, size) => {
   try {
     const params = {
       pageNo: page,
       pageSize: size,
     };
-    const response = await axiosInstance.get('/api/recipe/favorite/list', { params });
+    const response = await axiosInstance.get('/api/${entityType}/favorite/list', { params });
     const { content, last, number } = response.data.data;
     return { content: content || [], last, number };
   } catch (error) {
@@ -78,10 +78,10 @@ export const fetchFavoriteRecipes = async (page, size) => {
 };
 
 
-export const getLikeCount = async (recipeId) => {
+export const getLikeCount = async (entityId) => {
   try {
     const response = await axiosInstance.get(
-      `/api/recipe/${recipeId}/like/count`,
+      `/api/${entityType}/${entityId}/like/count`,
     );
     return response.data.data;
   } catch (error) {
@@ -90,10 +90,10 @@ export const getLikeCount = async (recipeId) => {
   }
 };
 
-export const fetchLikeStatus = async (recipeId) => {
+export const fetchLikeStatus = async (entityId) => {
   try {
     const response = await axiosInstance.get(
-      `/api/recipe/${recipeId}/like/status`,
+      `/api/${entityType}/${entityId}/like/status`,
     );
     return response.data.data;
   } catch (error) {
@@ -102,10 +102,10 @@ export const fetchLikeStatus = async (recipeId) => {
   }
 };
 
-export const fetchFavoriteStatus = async (recipeId) => {
+export const fetchFavoriteStatus = async (entityId) => {
   try {
     const response = await axiosInstance.get(
-      `/api/recipe/${recipeId}/favorite/status`,
+      `/api/${entityType}/${entityId}/favorite/status`,
     );
     return response.data.data;
   } catch (error) {
@@ -114,10 +114,10 @@ export const fetchFavoriteStatus = async (recipeId) => {
   }
 };
 
-export const toggleLike = async (recipeId) => {
+export const toggleLike = async (entityId) => {
   try {
     const response = await axiosInstance.post(
-      `/api/recipe/${recipeId}/like/toggle`,
+      `/api/${entityType}/${entityId}/like/toggle`,
     );
     return response.data.data;
   } catch (error) {
@@ -126,10 +126,10 @@ export const toggleLike = async (recipeId) => {
   }
 };
 
-export const toggleFavorite = async (recipeId) => {
+export const toggleFavorite = async (entityId) => {
   try {
     const response = await axiosInstance.post(
-      `/api/recipe/${recipeId}/favorite/toggle`,
+      `/api/${entityType}/${entityId}/favorite/toggle`,
     );
     return response.data;
   } catch (error) {
