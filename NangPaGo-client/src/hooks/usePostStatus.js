@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
   fetchFavoriteStatus,
   fetchLikeStatus,
@@ -7,11 +7,26 @@ import {
   toggleLike,
 } from '../api/postStatus';
 
+const checkLogin = (isLoggedIn, setModalState, message) => {
+  if (!isLoggedIn) {
+    setModalState({
+      type: 'login',
+      data: message,
+    });
+    return false;
+  }
+  return true;
+};
+
 const usePostStatus = (post, isLoggedIn) => {
   const [isHeartActive, setIsHeartActive] = useState(false);
   const [isStarActive, setIsStarActive] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
-  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [modalState, setModalState] = useState({
+    type: null,
+    data: null,
+  });
+
   const [isReconnecting, setIsReconnecting] = useState(false);
 
   const initializeData = async () => {
@@ -71,25 +86,22 @@ const usePostStatus = (post, isLoggedIn) => {
   }, [post]);
 
   const toggleHeart = async () => {
-    if (!isLoggedIn) {
-      setShowLoginModal(true);
+    if (!checkLogin(isLoggedIn, setModalState, '좋아요는 로그인 후 사용 가능합니다.')) {
       return;
     }
 
     try {
-      setIsHeartActive(!isHeartActive);
-      setLikeCount((prev) => (isHeartActive ? prev - 1 : prev + 1));
-      await toggleLike(post);
+      const { liked } = await toggleLike(post);
+      setIsHeartActive(liked);
+      setLikeCount((prev) => (liked ? prev + 1 : prev - 1));
     } catch (error) {
-      setIsHeartActive(!isHeartActive);
-      setLikeCount((prev) => (isHeartActive ? prev - 1 : prev + 1));
       console.error('좋아요 상태 변경 오류:', error);
     }
   };
 
   const toggleStar = async () => {
-    if (!isLoggedIn) {
-      setShowLoginModal(true);
+    if (!checkLogin(isLoggedIn, setModalState, '즐겨찾기는 로그인 후 사용 가능합니다.')) {
+
       return;
     }
 
@@ -101,14 +113,18 @@ const usePostStatus = (post, isLoggedIn) => {
     }
   };
 
+  useEffect(() => {
+    initializeData();
+  }, [initializeData]);
+
   return {
     isHeartActive,
     isStarActive: post.type === "recipe" ? isStarActive : undefined,
     likeCount,
-    showLoginModal,
     toggleHeart,
     toggleStar: post.type === "recipe" ? toggleStar : undefined,
-    setShowLoginModal,
+    modalState,
+    setModalState,
   };
 };
 

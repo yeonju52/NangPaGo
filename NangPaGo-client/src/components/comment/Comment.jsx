@@ -1,8 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import LoginModal from '../../components/modal/LoginModal';
-import DeleteModal from '../../components/modal/DeleteModal';
+import LoginModal from '../modal/LoginModal';
+import DeleteModal from '../modal/DeleteModal';
 import CommentList from './CommentList';
 import CommentForm from './CommentForm';
 import Pagination from './Pagination';
@@ -21,9 +20,10 @@ function Comment({ post, isLoggedIn }) {
   const [isEditing, setIsEditing] = useState(null);
   const [editedComment, setEditedComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showLoginModal, setShowLoginModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [commentToDelete, setCommentToDelete] = useState(null);
+  const [modalState, setModalState] = useState({
+    type: null,
+    data: null,
+  });
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [totalItems, setTotalItems] = useState(0);
@@ -54,7 +54,10 @@ function Comment({ post, isLoggedIn }) {
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
     if (!isLoggedIn) {
-      setShowLoginModal(true);
+      setModalState({
+        type: 'login',
+        data: '댓글 기능은 로그인 후 이용해 주세요.',
+      });
       return;
     }
     if (!commentText.trim()) {
@@ -88,18 +91,18 @@ function Comment({ post, isLoggedIn }) {
   };
 
   const handleDeleteComment = async () => {
-    if (!commentToDelete) return;
+    if (!modalState.data) return;
     try {
-      await deleteComment(post, commentToDelete);
+      await deleteComment(post, modalState.data);
       await loadComments(currentPage);
-      setShowDeleteModal(false);
+      setModalState({ type: null });
     } catch {
       alert('댓글 삭제 중 문제가 발생했습니다.');
     }
   };
 
   const handleLoginRedirect = () => {
-    setShowLoginModal(false);
+    setModalState({ type: null });
     navigate('/login');
   };
 
@@ -120,8 +123,7 @@ function Comment({ post, isLoggedIn }) {
         onEditChange={setEditedComment}
         onEditSubmit={handleEditComment}
         onDeleteClick={(commentId) => {
-          setCommentToDelete(commentId);
-          setShowDeleteModal(true);
+          setModalState({ type: 'delete', data: commentId });
         }}
         onSetEditing={setIsEditing}
         maskEmail={maskEmail}
@@ -140,15 +142,20 @@ function Comment({ post, isLoggedIn }) {
         onCommentChange={setCommentText}
         onSubmit={handleCommentSubmit}
       />
-      <LoginModal
-        isOpen={showLoginModal}
-        onClose={() => setShowLoginModal(false)}
-      />
-      <DeleteModal
-        isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        onDelete={handleDeleteComment}
-      />
+      {modalState.type === 'login' && (
+        <LoginModal
+          isOpen={true}
+          onClose={() => setModalState({ type: null })}
+          description={modalState.data}
+        />
+      )}
+      {modalState.type === 'delete' && (
+        <DeleteModal
+          isOpen={true}
+          onClose={() => setModalState({ type: null })}
+          onDelete={handleDeleteComment}
+        />
+      )}
     </div>
   );
 }

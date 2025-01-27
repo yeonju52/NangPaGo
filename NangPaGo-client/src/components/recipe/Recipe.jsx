@@ -1,6 +1,4 @@
-import { useEffect, useRef } from 'react';
-import { useSelector } from 'react-redux';
-import LoginModal from '../modal/LoginModal';
+import { useEffect, useRef, useCallback } from 'react';
 import CookingStepsSlider from './CookingStepsSlider';
 import NutritionInfo from './NutritionInfo';
 import IngredientList from './IngredientList';
@@ -8,6 +6,7 @@ import RecipeImage from './RecipeImage';
 import RecipeInfo from './RecipeInfo';
 import RecipeButton from '../button/RecipeButton';
 import usePostStatus from '../../hooks/usePostStatus';
+import LoginModal from '../modal/LoginModal';
 
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
@@ -17,10 +16,10 @@ function Recipe({ data: recipe, isLoggedIn }) {
     isHeartActive,
     isStarActive,
     likeCount,
-    showLoginModal,
     toggleHeart,
     toggleStar,
-    setShowLoginModal,
+    modalState,
+    setModalState,
   } = usePostStatus({ type: "recipe", id: recipe.id }, isLoggedIn);
 
   const rightSectionRef = useRef(null);
@@ -79,7 +78,6 @@ function Recipe({ data: recipe, isLoggedIn }) {
             className="w-full"
           />
         </div>
-
         <div
           className="md:w-1/2 md:flex md:flex-col md:justify-between"
           ref={rightSectionRef}
@@ -98,7 +96,6 @@ function Recipe({ data: recipe, isLoggedIn }) {
               </div>
             </div>
           </div>
-
           <div className="mt-7 flex flex-col md:gap-4">
             <IngredientList ingredients={recipe.ingredients} />
             <NutritionInfo
@@ -111,7 +108,6 @@ function Recipe({ data: recipe, isLoggedIn }) {
           </div>
         </div>
       </section>
-
       <section className="mt-7 px-4">
         <h2 className="text-lg font-semibold">요리 과정</h2>
         <CookingStepsSlider
@@ -133,10 +129,13 @@ function Recipe({ data: recipe, isLoggedIn }) {
           </span>
         </div>
       </section>
-      <LoginModal
-        isOpen={showLoginModal}
-        onClose={() => setShowDeleteModal(false)}
-      />
+      {modalState.type === 'login' && (
+        <LoginModal
+          isOpen={true}
+          onClose={() => setModalState({ type: null, data: null })}
+          description={modalState.data}
+        />
+      )}
     </>
   );
 }
