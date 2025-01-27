@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import { fetchDetailById } from '../../api/detailPage';
+import { useAuth } from "../../hooks/useAuth";
+import { fetchPostById } from '../../api/post';
 import Header from '../../components/layout/header/Header';
 import Footer from '../../components/layout/Footer';
 import { PAGE_STYLES } from '../../common/styles/ListPage';
@@ -22,17 +22,15 @@ function DetailPage({ type }) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const email = useSelector((state) => state.loginSlice.email);
-  const isLoggedIn = Boolean(email);
+  const { isLoggedIn } = useAuth();
 
   const fetchData = async () => {
     try {
-      const response = await fetchDetailById(type, id);
+      const response = await fetchPostById({ type: type, id: id });
       setData(response);
     } catch (err) {
       setError(`${type === 'recipe' ? '레시피' : '게시물'}을 불러오는데 실패했습니다.`);
-//       window.location.href = `/${type}`;
-      console.error(err);
+      navigate(`/${type}`);
     } finally {
       setLoading(false);
     }
