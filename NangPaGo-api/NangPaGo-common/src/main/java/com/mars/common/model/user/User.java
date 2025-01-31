@@ -69,8 +69,16 @@ public class User extends BaseEntity {
         this.userStatus = userStatus;
     }
 
-    public void softDelete() {
-        this.userStatus = UserStatus.from("탈퇴");
+    public void softDelete(){
+        this.userStatus = UserStatus.WITHDRAWN;
         this.leftAt = LocalDate.now();
+        this.nickname = "탈퇴한 회원 " + this.id;
+        this.email = "deleted-user " + this.id;
+        this.name = "-";
+        this.gender = Gender.NONE;
+        this.phone = "-";
+        this.profileImageUrl = "-";
+        this.providerId = "-";
+        this.birthday = "-";
     }
 }
