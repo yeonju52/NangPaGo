@@ -1,7 +1,9 @@
-package com.mars.app.domain.recipe.messaging;
+package com.mars.app.domain.recipe.event;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.ArgumentMatchers.argThat;
 
 import com.mars.app.domain.recipe.dto.RecipeLikeMessageDto;
 import com.mars.app.domain.recipe.repository.RecipeLikeRepository;
@@ -13,11 +15,15 @@ import com.mars.common.model.recipe.Recipe;
 import com.mars.common.model.recipe.RecipeLike;
 import com.mars.common.model.user.User;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.test.util.ReflectionTestUtils;
 
-class LikeNotificationConsumerTest extends IntegrationTestSupport {
+class RecipeLikeNotificationConsumerTest extends IntegrationTestSupport {
 
     @Autowired
     private RecipeLikeRepository recipeLikeRepository;
@@ -26,8 +32,16 @@ class LikeNotificationConsumerTest extends IntegrationTestSupport {
     @Autowired
     private UserRepository userRepository;
 
+    @Mock
+    private ApplicationEventPublisher sseEventPublisher;
+
     @Autowired
-    private LikeNotificationConsumer likeNotificationConsumer;
+    private RecipeLikeNotificationConsumer recipeLikeNotificationConsumer;
+
+    @BeforeEach
+    void setUp() {
+        ReflectionTestUtils.setField(recipeLikeNotificationConsumer, "sseEventPublisher", sseEventPublisher);
+    }
 
     @AfterEach
     void tearDown() {
@@ -61,9 +75,17 @@ class LikeNotificationConsumerTest extends IntegrationTestSupport {
         RecipeLikeMessageDto messageDto = RecipeLikeMessageDto.of(recipe.getId(), user.getId());
 
         // when
-        likeNotificationConsumer.processLikeEvent(messageDto);
+        recipeLikeNotificationConsumer.processLikeEvent(messageDto);
 
         // then
+        verify(sseEventPublisher).publishEvent(
+            argThat(event -> {
+                RecipeLikeEvent recipeLikeEvent = (RecipeLikeEvent) event;
+                return recipeLikeEvent.getRecipeId().equals(recipe.getId()) &&
+                       recipeLikeEvent.getUserId().equals(user.getId()) &&
+                       recipeLikeEvent.getLikeCount() == 1;
+            })
+        );
         assertThat(recipeLikeRepository.findByUserIdAndRecipeId(user.getId(), recipe.getId()))
             .isPresent();
         assertThat(recipeLikeRepository.countByRecipeId(recipe.getId())).isEqualTo(1);
@@ -85,9 +107,17 @@ class LikeNotificationConsumerTest extends IntegrationTestSupport {
         RecipeLikeMessageDto messageDto = RecipeLikeMessageDto.of(recipe.getId(), user.getId());
 
         // when
-        likeNotificationConsumer.processLikeEvent(messageDto);
+        recipeLikeNotificationConsumer.processLikeEvent(messageDto);
 
         // then
+        verify(sseEventPublisher).publishEvent(
+            argThat(event -> {
+                RecipeLikeEvent recipeLikeEvent = (RecipeLikeEvent) event;
+                return recipeLikeEvent.getRecipeId().equals(recipe.getId()) &&
+                       recipeLikeEvent.getUserId().equals(user.getId()) &&
+                       recipeLikeEvent.getLikeCount() == 0;
+            })
+        );
         assertThat(recipeLikeRepository.findByUserIdAndRecipeId(user.getId(), recipe.getId()))
             .isEmpty();
         assertThat(recipeLikeRepository.countByRecipeId(recipe.getId())).isZero();
@@ -103,7 +133,7 @@ class LikeNotificationConsumerTest extends IntegrationTestSupport {
         RecipeLikeMessageDto messageDto = RecipeLikeMessageDto.of(recipe.getId(), 9999L);
 
         // when & then
-        assertThatThrownBy(() -> likeNotificationConsumer.processLikeEvent(messageDto))
+        assertThatThrownBy(() -> recipeLikeNotificationConsumer.processLikeEvent(messageDto))
             .isInstanceOf(NPGException.class)
             .hasMessage("사용자를 찾을 수 없습니다.");
     }
@@ -118,7 +148,7 @@ class LikeNotificationConsumerTest extends IntegrationTestSupport {
         RecipeLikeMessageDto messageDto = RecipeLikeMessageDto.of(999L, user.getId());
 
         // when & then
-        assertThatThrownBy(() -> likeNotificationConsumer.processLikeEvent(messageDto))
+        assertThatThrownBy(() -> recipeLikeNotificationConsumer.processLikeEvent(messageDto))
             .isInstanceOf(NPGException.class)
             .hasMessage("레시피를 찾을 수 없습니다.");
     }
