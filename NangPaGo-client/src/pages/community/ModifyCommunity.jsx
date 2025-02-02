@@ -1,14 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
-import { updateCommunity, getCommunityDetail } from '../../api/community';
+import { fetchPostById } from '../../api/post';
+import { updateCommunity } from '../../api/community';
 import Header from '../../components/layout/header/Header';
-import Footer from '../../components/common/Footer';
+import Footer from '../../components/layout/Footer';
 import TextInput from '../../components/community/TextInput';
 import TextArea from '../../components/community/TextArea';
 import FileUpload from '../../components/community/FileUpload';
-import ErrorMessage from '../../components/common/ErrorMessage';
-import SubmitButton from '../../components/common/SubmitButton';
-import FileSizeErrorModal from '../../common/modal/FileSizeErrorModal';
+import {ERROR_STYLES} from '../../common/styles/ErrorMessage';
+import SubmitButton from '../../components/button/SubmitButton';
+import FileSizeErrorModal from '../../components/modal/FileSizeErrorModal';
 
 const DEFAULT_IMAGE_URL =
   'https://storage.googleapis.com/nangpago-9d371.firebasestorage.app/dc137676-6240-4920-97d3-727c4b7d6d8d_360_F_517535712_q7f9QC9X6TQxWi6xYZZbMmw5cnLMr279.jpg';
@@ -39,7 +40,7 @@ function ModifyCommunity() {
   useEffect(() => {
     const fetchCommunity = async () => {
       try {
-        const { data } = await getCommunityDetail(id);
+        const { data } = await fetchPostById({type: "community", id: id});
         console.log(data);
         if (!data.isOwnedByUser) {
           navigate(`/community/${id}`, { replace: true });
@@ -185,7 +186,7 @@ function ModifyCommunity() {
             비공개 (체크 시 로그인한 사용자만 볼 수 있습니다.)
           </label>
         </div>
-        <ErrorMessage error={error} />
+        <p className={ERROR_STYLES.community}>{error}</p>
         <div className="mt-4">
           {' '}
           <SubmitButton onClick={handleSubmit} label="수정 완료" />

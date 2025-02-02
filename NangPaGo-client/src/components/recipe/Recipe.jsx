@@ -1,45 +1,36 @@
-import { useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-
-import Header from '../layout/header/Header';
-import Footer from '../common/Footer';
-import LoginModal from '../../common/modal/LoginModal';
-import RecipeComment from './comment/RecipeComment';
+import { useEffect, useRef, useCallback } from 'react';
 import CookingStepsSlider from './CookingStepsSlider';
 import NutritionInfo from './NutritionInfo';
 import IngredientList from './IngredientList';
 import RecipeImage from './RecipeImage';
 import RecipeInfo from './RecipeInfo';
-import RecipeButton from './RecipeButton';
-
-import useRecipeData from '../../hooks/useRecipeData';
+import RecipeButton from '../button/RecipeButton';
+import usePostStatus from '../../hooks/usePostStatus';
+import LoginModal from '../modal/LoginModal';
 
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 
-function Recipe({ recipe }) {
-  const { email: userEmail } = useSelector((state) => state.loginSlice);
-  const isLoggedIn = Boolean(userEmail);
-
+function Recipe({ data: recipe, isLoggedIn }) {
   const {
     isHeartActive,
     isStarActive,
     likeCount,
-    showLoginModal,
     toggleHeart,
     toggleStar,
-    setShowLoginModal,
-  } = useRecipeData(recipe.id, isLoggedIn);
+    modalState,
+    setModalState,
+  } = usePostStatus("recipe", recipe.id, isLoggedIn);
 
-  const navigate = useNavigate();
   const rightSectionRef = useRef(null);
   const imageRef = useRef(null);
   const sliderRef = useRef(null);
 
   useEffect(() => {
     const adjustImageHeight = () => {
-      if (!rightSectionRef.current || !imageRef.current) return;
+      if (!rightSectionRef.current || !imageRef.current) {
+        return;
+      }
 
       if (window.innerWidth > 767) {
         const rightSectionHeight = rightSectionRef.current.offsetHeight;
@@ -69,85 +60,83 @@ function Recipe({ recipe }) {
     return () => window.removeEventListener('resize', resetSlider);
   }, []);
 
-  const closeModal = () => setShowLoginModal(false);
-  const navigateToLogin = () => {
-    closeModal();
-    navigate('/login');
-  };
-
   return (
-    <div className="bg-white shadow-md mx-auto min-h-screen flex flex-col justify-between min-w-80 max-w-screen-sm md:max-w-screen-md lg:max-w-screen-lg">
-      <Header />
-
-      <main>
-        <section className="mt-4 px-4 md:flex md:gap-8 md:items-start">
-          <RecipeImage
-            imageRef={imageRef}
-            mainImage={recipe.mainImage}
-            recipeName={recipe.name}
+    <>
+      <section className="mt-4 px-4 md:flex md:gap-8 md:items-start">
+        <RecipeImage
+          imageRef={imageRef}
+          mainImage={recipe.mainImage}
+          recipeName={recipe.name}
+        />
+        <div className="mt-4 md:hidden">
+          <RecipeButton
+            isHeartActive={isHeartActive}
+            isStarActive={isStarActive}
+            likeCount={likeCount}
+            toggleHeart={toggleHeart}
+            toggleStar={toggleStar}
+            className="w-full"
           />
-          <div className="mt-4 md:hidden">
-            <RecipeButton
-              isHeartActive={isHeartActive}
-              isStarActive={isStarActive}
-              likeCount={likeCount}
-              toggleHeart={toggleHeart}
-              toggleStar={toggleStar}
-              className="w-full"
-            />
-          </div>
-
-          <div
-            className="md:w-1/2 md:flex md:flex-col md:justify-between"
-            ref={rightSectionRef}
-          >
-            <div>
-              <div className="flex flex-col md:flex-row md:items-start md:justify-between mt-4 md:mt-0">
-                <RecipeInfo recipe={recipe} />
-                <div className="hidden md:flex items-center gap-4">
-                  <RecipeButton
-                    isHeartActive={isHeartActive}
-                    isStarActive={isStarActive}
-                    likeCount={likeCount}
-                    toggleHeart={toggleHeart}
-                    toggleStar={toggleStar}
-                  />
-                </div>
+        </div>
+        <div
+          className="md:w-1/2 md:flex md:flex-col md:justify-between"
+          ref={rightSectionRef}
+        >
+          <div>
+            <div className="flex flex-col md:flex-row md:items-start md:justify-between mt-4 md:mt-0">
+              <RecipeInfo recipe={recipe} />
+              <div className="hidden md:flex items-center gap-4">
+                <RecipeButton
+                  isHeartActive={isHeartActive}
+                  isStarActive={isStarActive}
+                  likeCount={likeCount}
+                  toggleHeart={toggleHeart}
+                  toggleStar={toggleStar}
+                />
               </div>
             </div>
-
-            <div className="mt-7 flex flex-col md:gap-4">
-              <IngredientList ingredients={recipe.ingredients} />
-              <NutritionInfo
-                calories={recipe.calorie}
-                fat={recipe.fat}
-                carbs={recipe.carbohydrate}
-                protein={recipe.protein}
-                sodium={recipe.natrium}
-              />
-            </div>
           </div>
-        </section>
-
-        <section className="mt-7 px-4">
-          <h2 className="text-lg font-semibold">요리 과정</h2>
-          <CookingStepsSlider
-            ref={sliderRef}
-            manuals={recipe.manuals}
-            manualImages={recipe.manualImages}
-          />
-        </section>
-
-        <RecipeComment recipeId={recipe.id} />
-      </main>
-
-      <Footer />
-      <LoginModal
-        isOpen={showLoginModal}
-        onConfirm={navigateToLogin}
-        onClose={closeModal}
-      />
-    </div>
+          <div className="mt-7 flex flex-col md:gap-4">
+            <IngredientList ingredients={recipe.ingredients} />
+            <NutritionInfo
+              calories={recipe.calorie}
+              fat={recipe.fat}
+              carbs={recipe.carbohydrate}
+              protein={recipe.protein}
+              sodium={recipe.natrium}
+            />
+          </div>
+        </div>
+      </section>
+      <section className="mt-7 px-4">
+        <h2 className="text-lg font-semibold">요리 과정</h2>
+        <CookingStepsSlider
+          ref={sliderRef}
+          manuals={recipe.manuals}
+          manualImages={recipe.manualImages}
+        />
+        <div className="flex justify-end mt-14 sm:scroll-mt-20">
+          <span className="text-[7pt] sm:text-[8pt] text-gray-400">
+            * 이 레시피는 "
+            <a
+              href="https://www.foodsafetykorea.go.kr/api/openApiInfo.do?menu_grp=MENU_GRP31&menu_no=661&show_cnt=10&start_idx=1&svc_no=COOKRCP01"
+              target="_blank"
+              className="text-blue-500 underline"
+            >
+              식품의약품안전처 - 요리 음식 레시피 DB
+            </a>
+            "에서 제공된 정보를 바탕으로 작성되었습니다.
+          </span>
+        </div>
+      </section>
+      {modalState.type === 'login' && (
+        <LoginModal
+          isOpen={true}
+          onClose={() => setModalState({ type: null, data: null })}
+          description={modalState.data}
+        />
+      )}
+    </>
   );
 }
 

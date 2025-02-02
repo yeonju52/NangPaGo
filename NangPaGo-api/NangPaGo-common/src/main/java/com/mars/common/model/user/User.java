@@ -8,22 +8,14 @@ import com.mars.common.model.BaseEntity;
 import com.mars.common.model.comment.recipe.RecipeComment;
 import com.mars.common.model.favorite.recipe.RecipeFavorite;
 import com.mars.common.model.recipe.RecipeLike;
-
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import java.time.LocalDate;
-import java.util.List;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDate;
+import java.util.List;
 
 @Builder
 @Getter
@@ -31,6 +23,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Entity
 public class User extends BaseEntity {
+
+    public static final Long ANONYMOUS_USER_ID = -1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -52,7 +46,7 @@ public class User extends BaseEntity {
     private String providerId;
 
     @Enumerated(EnumType.STRING)
-    @Column(name="user_status")
+    @Column(name = "user_status")
     private UserStatus userStatus;
     private LocalDate leftAt;
 
@@ -67,13 +61,24 @@ public class User extends BaseEntity {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RecipeFavorite> favorites;
 
-    public User updateNickname(UserInfoRequestDto requestDto) {
+    public void updateNickname(UserInfoRequestDto requestDto) {
         this.nickname = requestDto.nickname();
-        return this;
     }
 
-    public void softDelete(){
-        this.userStatus = UserStatus.from("탈퇴");
+    public void updateUserStatus(UserStatus userStatus) {
+        this.userStatus = userStatus;
+    }
+
+    public void withdraw() {
+        this.userStatus = UserStatus.WITHDRAWN;
         this.leftAt = LocalDate.now();
+        this.nickname = "탈퇴한 회원 " + this.id;
+        this.email = "deleted-user " + this.id;
+        this.name = "-";
+        this.gender = Gender.NONE;
+        this.phone = "-";
+        this.profileImageUrl = "-";
+        this.providerId = "-";
+        this.birthday = "-";
     }
 }

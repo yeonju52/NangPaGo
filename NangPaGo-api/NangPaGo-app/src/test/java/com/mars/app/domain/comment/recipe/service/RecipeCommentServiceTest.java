@@ -47,7 +47,7 @@ class RecipeCommentServiceTest extends IntegrationTestSupport {
         int pageNo = 0;
         int pageSize = 3;
 
-        User user = createUser("dummy@nangpago.com");
+        User user = createUser("dummy@nangpago.com", "TestNickName");
         Recipe recipe = createRecipe("파스타");
         List<RecipeComment> comments = Arrays.asList(
             createRecipeComment(recipe, user, "1번째 댓글"),
@@ -62,7 +62,7 @@ class RecipeCommentServiceTest extends IntegrationTestSupport {
 
         // when
         PageDto<RecipeCommentResponseDto> pageDto = recipeCommentService.pagedCommentsByRecipe(recipe.getId(),
-            user.getEmail(), pageNo, pageSize);
+            user.getId(), pageNo, pageSize);
 
         //then
         assertThat(pageDto)
@@ -74,7 +74,7 @@ class RecipeCommentServiceTest extends IntegrationTestSupport {
     @Test
     void create() {
         // given
-        User user = createUser("dummy@nangpago.com");
+        User user = createUser("dummy@nangpago.com", "TestNickName");
         Recipe recipe = createRecipe("파스타");
 
         userRepository.save(user);
@@ -83,19 +83,19 @@ class RecipeCommentServiceTest extends IntegrationTestSupport {
         RecipeCommentRequestDto requestDto = new RecipeCommentRequestDto("댓글 작성 예시");
 
         // when
-        RecipeCommentResponseDto responseDto = recipeCommentService.create(requestDto, user.getEmail(), recipe.getId());
+        RecipeCommentResponseDto responseDto = recipeCommentService.create(requestDto, user.getId(), recipe.getId());
 
         // then
         assertThat(responseDto)
-            .extracting("content", "email")
-            .containsExactly("댓글 작성 예시", "dum**@nangpago.com");
+            .extracting("content", "writerName")
+            .containsExactly("댓글 작성 예시", "TestNickName");
     }
 
     @DisplayName("레시피 댓글을 수정할 수 있다.")
     @Test
     void update() {
         // given
-        User user = createUser("dummy@nangpago.com");
+        User user = createUser("dummy@nangpago.com", "TestNickName");
         Recipe recipe = createRecipe("파스타");
         RecipeComment comment = createRecipeComment(recipe, user, "변경 전 댓글입니다.");
 
@@ -107,7 +107,7 @@ class RecipeCommentServiceTest extends IntegrationTestSupport {
         RecipeCommentRequestDto requestDto = new RecipeCommentRequestDto(updateText); // 텍스트 변경
 
         // when
-        RecipeCommentResponseDto responseDto = recipeCommentService.update(comment.getId(), user.getEmail(),
+        RecipeCommentResponseDto responseDto = recipeCommentService.update(comment.getId(), user.getId(),
             requestDto);
 
         // then
@@ -119,7 +119,7 @@ class RecipeCommentServiceTest extends IntegrationTestSupport {
     @Test
     void delete() {
         // given
-        User user = createUser("dummy@nangpago.com");
+        User user = createUser("dummy@nangpago.com", "TestNickName");
         Recipe recipe = createRecipe("파스타");
         RecipeComment comment = createRecipeComment(recipe, user, "댓글");
 
@@ -128,7 +128,7 @@ class RecipeCommentServiceTest extends IntegrationTestSupport {
         recipeCommentRepository.save(comment);
 
         // when
-        recipeCommentService.delete(comment.getId(), user.getEmail());
+        recipeCommentService.delete(comment.getId(), user.getId());
 
         // then
         assertThat(recipeCommentRepository.existsById(comment.getId()))
@@ -139,7 +139,7 @@ class RecipeCommentServiceTest extends IntegrationTestSupport {
     @Test
     void validateOwnershipException() {
         // given
-        User user = createUser("dummy@nangpago.com");
+        User user = createUser("dummy@nangpago.com", "TestNickName");
         Recipe recipe = createRecipe("파스타");
         RecipeComment comment = createRecipeComment(recipe, user, "댓글");
 
@@ -147,10 +147,10 @@ class RecipeCommentServiceTest extends IntegrationTestSupport {
         recipeRepository.save(recipe);
         recipeCommentRepository.save(comment);
 
-        String anotherUserEmail = "another@nangpago.com";
+        Long anotherUserId = 9999L;
 
         // when, then
-        assertThatThrownBy(() -> recipeCommentService.delete(comment.getId(), anotherUserEmail))
+        assertThatThrownBy(() -> recipeCommentService.delete(comment.getId(), anotherUserId))
             .isInstanceOf(NPGException.class)
             .hasMessage("댓글을 수정/삭제할 권한이 없습니다.");
     }
@@ -159,13 +159,13 @@ class RecipeCommentServiceTest extends IntegrationTestSupport {
     @Test
     void validateRecipeException() {
         // given
-        User user = createUser("dummy@nangpago.com");
+        User user = createUser("dummy@nangpago.com", "TestNickName");
         userRepository.save(user);
 
         RecipeCommentRequestDto requestDto = new RecipeCommentRequestDto("댓글 작성 예시");
 
         // when, then
-        assertThatThrownBy(() -> recipeCommentService.create(requestDto, user.getEmail(), 1L))
+        assertThatThrownBy(() -> recipeCommentService.create(requestDto, user.getId(), 1L))
             .isInstanceOf(NPGException.class)
             .hasMessage("레시피를 찾을 수 없습니다.");
     }
@@ -180,7 +180,7 @@ class RecipeCommentServiceTest extends IntegrationTestSupport {
         RecipeCommentRequestDto requestDto = new RecipeCommentRequestDto("댓글 작성 예시");
 
         // when, then
-        assertThatThrownBy(() -> recipeCommentService.create(requestDto, "dummy@nangpago.com", recipe.getId()))
+        assertThatThrownBy(() -> recipeCommentService.create(requestDto, 9999L, recipe.getId()))
             .isInstanceOf(NPGException.class)
             .hasMessage("사용자를 찾을 수 없습니다.");
     }
@@ -189,7 +189,7 @@ class RecipeCommentServiceTest extends IntegrationTestSupport {
     @Test
     void validateCommentException() {
         // given
-        User user = createUser("dummy@nangpago.com");
+        User user = createUser("dummy@nangpago.com", "TestNickName");;
         Recipe recipe = createRecipe("파스타");
         RecipeComment comment = createRecipeComment(recipe, user, "변경 전 댓글입니다.");
 
@@ -201,14 +201,37 @@ class RecipeCommentServiceTest extends IntegrationTestSupport {
         RecipeCommentRequestDto requestDto = new RecipeCommentRequestDto(updateText); // 텍스트 변경
 
         // when, then
-        assertThatThrownBy(() -> recipeCommentService.update(1L, user.getEmail(), requestDto))
+        assertThatThrownBy(() -> recipeCommentService.update(1L, user.getId(), requestDto))
             .isInstanceOf(NPGException.class)
             .hasMessage("댓글을 찾을 수 없습니다.");
     }
 
-    private User createUser(String email) {
+    @DisplayName("레시피의 댓글 총 개수를 조회할 수 있다.")
+    @Test
+    void getCommentsCount() {
+        // given
+        User user = createUser("dummy@nangpago.com", "dummy user");
+        Recipe recipe = createRecipe("파스타");
+        userRepository.save(user);
+        recipeRepository.save(recipe);
+
+        recipeCommentRepository.saveAll(List.of(
+            createRecipeComment(recipe, user, "댓글 1"),
+            createRecipeComment(recipe, user, "댓글 2"),
+            createRecipeComment(recipe, user, "댓글 3")
+        ));
+
+        // when
+        int result = recipeCommentService.countCommentsByRecipe(recipe.getId());
+
+        // then
+        assertThat(result).isEqualTo(3);
+    }
+
+    private User createUser(String email, String writerName) {
         return User.builder()
             .email(email)
+            .nickname(writerName)
             .build();
     }
 

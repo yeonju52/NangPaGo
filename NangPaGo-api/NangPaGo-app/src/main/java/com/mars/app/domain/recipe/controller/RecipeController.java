@@ -1,6 +1,7 @@
 package com.mars.app.domain.recipe.controller;
 
-import com.mars.app.domain.recipe.messaging.SseEmitterService;
+import com.mars.app.domain.recipe.message.RecipeLikeMessagePublisher;
+import com.mars.app.domain.recipe.event.RecipeLikeSseService;
 import com.mars.common.dto.ResponseDto;
 import com.mars.app.aop.auth.AuthenticatedUser;
 import com.mars.app.component.auth.AuthenticationHolder;
@@ -33,7 +34,8 @@ public class RecipeController {
     private final RecipeLikeService recipeLikeService;
     private final RecipeEsService recipeEsService;
     private final RecipeEsSynchronizerService recipeEsSynchronizerService;
-    private final SseEmitterService sseEmitterService;
+    private final RecipeLikeMessagePublisher recipeLikeMessagePublisher;
+    private final RecipeLikeSseService recipeLikeSseService;
 
     @GetMapping("/{id}")
     public ResponseDto<RecipeResponseDto> recipeById(@PathVariable("id") Long id) {
@@ -43,15 +45,15 @@ public class RecipeController {
     @AuthenticatedUser
     @GetMapping("/{id}/like/status")
     public ResponseDto<Boolean> getRecipeLikeStatus(@PathVariable Long id) {
-        String email = AuthenticationHolder.getCurrentUserEmail();
-        return ResponseDto.of(recipeLikeService.isLiked(id, email));
+        Long userId = AuthenticationHolder.getCurrentUserId();
+        return ResponseDto.of(recipeLikeService.isLiked(id, userId));
     }
 
     @AuthenticatedUser
     @PostMapping("/{id}/like/toggle")
     public ResponseDto<RecipeLikeResponseDto> toggleRecipeLike(@PathVariable Long id) {
-        String email = AuthenticationHolder.getCurrentUserEmail();
-        return ResponseDto.of(recipeLikeService.toggleLike(id, email));
+        Long userId = AuthenticationHolder.getCurrentUserId();
+        return ResponseDto.of(recipeLikeMessagePublisher.toggleLike(id, userId));
     }
 
     @GetMapping("/{id}/like/count")
@@ -61,7 +63,7 @@ public class RecipeController {
 
     @GetMapping("/{id}/like/notification/subscribe")
     public SseEmitter streamLikes(@PathVariable Long id) {
-        return sseEmitterService.createEmitter(id);
+        return recipeLikeSseService.createEmitter(id);
     }
 
     @GetMapping("/search")

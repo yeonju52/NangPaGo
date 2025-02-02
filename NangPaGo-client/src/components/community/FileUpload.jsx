@@ -1,4 +1,5 @@
-import { styles } from '../common/Image';
+import { IMAGE_STYLES } from '../../common/styles/Image';
+import { FaTimes } from 'react-icons/fa';
 
 function FileUpload({ file, onChange, imagePreview, onCancel }) {
   const handleCancel = (e) => {
@@ -17,14 +18,14 @@ function FileUpload({ file, onChange, imagePreview, onCancel }) {
             <img
               src={imagePreview}
               alt="Uploaded Preview"
-              className={`${styles.mainImage} object-contain`}
+              className={`${IMAGE_STYLES.mainImage} object-contain`}
             />
             <button
               type="button"
               onClick={handleCancel}
               className="absolute top-2 right-2 bg-gray-400 text-white w-6 h-6 flex items-center justify-center rounded-full z-10 text-base opacity-70"
             >
-              x
+              <FaTimes className="w-4 h-4" />
             </button>
           </>
         ) : (

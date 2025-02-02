@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mars.common.dto.ResponseDto;
 import com.mars.common.exception.NPGException;
 import com.mars.common.exception.NPGExceptionType;
-import com.mars.common.util.JwtUtil;
+import com.mars.common.util.web.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,19 +22,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
-
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-        String path = request.getRequestURI();
-        return path.equals("/") ||
-            path.equals("/index.html") ||
-            path.matches("/static/.*") ||
-            path.matches("/assets/.*") ||
-            path.matches("/socialLogin/.*") ||
-            path.matches("/fonts/.*") ||
-            path.matches("/logo\\..*") ||
-            path.matches(".*\\.(js|css|ico|png|jpg|jpeg|gif|svg)$");
-    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,

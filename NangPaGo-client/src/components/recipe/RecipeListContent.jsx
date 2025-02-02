@@ -1,9 +1,10 @@
 import RecipeCard from './RecipeCard';
 import { useEffect, useState, useRef } from 'react';
 import {
-  fetchRecommendedRecipes,
-  fetchFavoriteRecipes,
+  fetchRecommendedPosts,
+  fetchFavoritePosts,
 } from '../../api/recipe';
+import { PAGE_INDEX, PAGE_SIZE } from '../../common/constants/pagination'
 
 function RecipeListContent({ activeTab, searchTerm = '', isLoggedIn }) {
   const [recipes, setRecipes] = useState({
@@ -21,12 +22,12 @@ function RecipeListContent({ activeTab, searchTerm = '', isLoggedIn }) {
 
   const observerRef = useRef(null);
   const observerInstance = useRef(null);
-  const pageSize = 12;
+  const pageSize = PAGE_SIZE.list;
   const isFetching = useRef(false);
 
   const fetchFunctions = {
-    recommended: (page) => fetchRecommendedRecipes(searchTerm, page, pageSize),
-    favorites: (page) => fetchFavoriteRecipes(page, pageSize),
+    recommended: (page) => fetchRecommendedPosts(searchTerm, page, pageSize),
+    favorites: (page) => fetchFavoritePosts(page, pageSize),
   };
 
   const loadRecipes = async (type, page = 1, isInitial = false) => {
@@ -67,7 +68,7 @@ function RecipeListContent({ activeTab, searchTerm = '', isLoggedIn }) {
       observerInstance.current = new IntersectionObserver(
         ([entry]) => {
           if (entry.isIntersecting) {
-            loadRecipes(activeTab, currentPage[activeTab] + 1);
+            loadRecipes(activeTab, currentPage[activeTab] + PAGE_INDEX.one);
           }
         },
         { threshold: 1.0 },

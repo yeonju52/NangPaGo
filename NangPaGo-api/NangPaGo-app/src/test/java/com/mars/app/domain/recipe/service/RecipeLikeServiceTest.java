@@ -13,6 +13,7 @@ import com.mars.common.model.user.User;
 import com.mars.app.domain.user.repository.UserRepository;
 import com.mars.app.support.IntegrationTestSupport;
 import jakarta.transaction.Transactional;
+import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -37,113 +38,20 @@ class RecipeLikeServiceTest extends IntegrationTestSupport {
         userRepository.deleteAllInBatch();
     }
 
-    private User createUser(String email) {
-        return User.builder()
-            .email(email)
-            .build();
-    }
-
-    private Recipe createRecipe(String name) {
-        return Recipe.builder()
-            .name(name)
-            .build();
-    }
-
-    @Transactional
-    @DisplayName("레시피 좋아요를 클릭할 수 있다.")
-    @Test
-    void addRecipeLike() {
-        // given
-        User user = createUser("dummy@nangpago.com");
-        Recipe recipe = createRecipe("파스타");
-
-        userRepository.save(user);
-        recipeRepository.save(recipe);
-
-        // when
-        RecipeLikeResponseDto recipeLikeResponseDto = recipeLikeService.toggleLike(recipe.getId(), user.getEmail());
-
-        // then
-        assertThat(recipeLikeResponseDto).isNotNull()
-            .extracting("liked")
-            .isEqualTo(true);
-        assertThat(recipeLikeResponseDto.recipeId()).isEqualTo(recipe.getId());
-    }
-
-    @Transactional
-    @DisplayName("레시피 좋아요를 취소할 수 있다.")
-    @Test
-    void cancelRecipeLike() {
-        // given
-        User user = createUser("dummy@nangpago.com");
-        Recipe recipe = createRecipe("파스타");
-        RecipeLike recipeLike = RecipeLike.of(user, recipe);
-
-        userRepository.save(user);
-        recipeRepository.save(recipe);
-        recipeLikeRepository.save(recipeLike);
-
-        // when
-        RecipeLikeResponseDto recipeLikeResponseDto = recipeLikeService.toggleLike(recipe.getId(), user.getEmail());
-
-        // then
-        assertThat(recipeLikeResponseDto).isNotNull()
-            .extracting("liked")
-            .isEqualTo(false);
-    }
-
-    @DisplayName("좋아요를 클릭한 유저의 이메일을 찾을 수 없을 때 예외를 발생시킬 수 있다.")
-    @Test
-    void notFoundUserException() {
-        // given
-        User user = createUser("nonExistent@nangpago.com");
-        setAuthenticationAsUserWithToken(user.getEmail());
-        Recipe recipe = createRecipe("파스타");
-        recipeRepository.save(recipe);
-
-        Long recipeId = recipe.getId();
-        String email = user.getEmail();
-
-        // when & then
-        assertThatThrownBy(() -> recipeLikeService.toggleLike(recipeId, email))
-            .isInstanceOf(NPGException.class)
-            .hasMessage("사용자를 찾을 수 없습니다.");
-    }
-
-    @DisplayName("recipeId 로 레시피를 찾을 수 없을 때 예외를 발생시킬 수 있다.")
-    @Test
-    void notFoundRecipeException() {
-        // given
-        User user = createUser("example@nangpago.com");
-        userRepository.save(user);
-
-        String email = user.getEmail();
-
-        // when & then
-        assertThatThrownBy(() -> recipeLikeService.toggleLike(1L, email))
-            .isInstanceOf(NPGException.class)
-            .hasMessage("레시피를 찾을 수 없습니다.");
-    }
-
     @DisplayName("좋아요를 누른 레시피는 좋아요 상태가 true 이다.")
     @Test
     void isLikedByUser() {
         // given
         User user = createUser("example@nangpago.com");
         Recipe recipe = createRecipe("파스타");
-
         userRepository.save(user);
         recipeRepository.save(recipe);
 
-        RecipeLike recipeLike = RecipeLike.builder()
-            .user(user)
-            .recipe(recipe)
-            .build();
-
+        RecipeLike recipeLike = createRecipeLike(user, recipe);
         recipeLikeRepository.save(recipeLike);
 
         // when
-        boolean isLiked = recipeLikeService.isLiked(recipe.getId(), user.getEmail());
+        boolean isLiked = recipeLikeService.isLiked(recipe.getId(), user.getId());
 
         // then
         assertThat(isLiked).isTrue();
@@ -160,7 +68,7 @@ class RecipeLikeServiceTest extends IntegrationTestSupport {
         recipeRepository.save(recipe);
 
         // when
-        boolean isLiked = recipeLikeService.isLiked(recipe.getId(), user.getEmail());
+        boolean isLiked = recipeLikeService.isLiked(recipe.getId(), user.getId());
 
         // then
         assertThat(isLiked).isFalse();
@@ -178,16 +86,55 @@ class RecipeLikeServiceTest extends IntegrationTestSupport {
         userRepository.save(user2);
         recipeRepository.save(recipe);
 
-        RecipeLike recipeLike = RecipeLike.builder()
-            .user(user1)
-            .recipe(recipe)
-            .build();
+        RecipeLike recipeLike = createRecipeLike(user1, recipe);
         recipeLikeRepository.save(recipeLike);
 
         // when
-        boolean isLiked = recipeLikeService.isLiked(recipe.getId(), user2.getEmail());
+        boolean isLiked = recipeLikeService.isLiked(recipe.getId(), user2.getId());
 
         // then
         assertThat(isLiked).isFalse();
+    }
+
+    @DisplayName("레시피의 좋아요 개수를 조회할 수 있다.")
+    @Test
+    void getLikeCount() {
+        // given
+        User user1 = createUser("user1@nangpago.com");
+        User user2 = createUser("user2@nangpago.com");
+        Recipe recipe = createRecipe("파스타");
+
+        userRepository.save(user1);
+        userRepository.save(user2);
+        recipeRepository.save(recipe);
+
+        RecipeLike recipeLike1 = createRecipeLike(user1, recipe);
+        RecipeLike recipeLike2 = createRecipeLike(user2, recipe);
+        recipeLikeRepository.saveAll(List.of(recipeLike1, recipeLike2));
+
+        // when
+        int likeCount = recipeLikeService.getLikeCount(recipe.getId());
+
+        // then
+        assertThat(likeCount).isEqualTo(2);
+    }
+
+    private User createUser(String email) {
+        return User.builder()
+            .email(email)
+            .build();
+    }
+
+    private Recipe createRecipe(String name) {
+        return Recipe.builder()
+            .name(name)
+            .build();
+    }
+
+    private RecipeLike createRecipeLike(User user, Recipe recipe) {
+        return RecipeLike.builder()
+            .user(user)
+            .recipe(recipe)
+            .build();
     }
 }

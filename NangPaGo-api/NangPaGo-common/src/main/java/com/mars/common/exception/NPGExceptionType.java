@@ -45,7 +45,7 @@ public enum NPGExceptionType {
 
     // Conflict(409)
     DUPLICATE_INGREDIENT(HttpStatus.CONFLICT, "이미 등록되어있는 정보입니다."),
-
+    
     // Unprocessable Entity(422)
     UNPROCESSABLE_JSON(HttpStatus.UNPROCESSABLE_ENTITY, "JSON 객체 변환에 실패했습니다."),
 

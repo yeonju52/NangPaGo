@@ -3,12 +3,12 @@ package com.mars.app.auth.handler;
 import static com.mars.common.exception.NPGExceptionType.NOT_FOUND_USER;
 
 import com.mars.app.auth.vo.OAuth2UserImpl;
-import com.mars.common.util.JwtUtil;
+import com.mars.common.util.web.CookieUtil;
+import com.mars.common.util.web.JwtUtil;
 import com.mars.app.domain.auth.service.OAuth2ProviderTokenService;
 import com.mars.app.domain.auth.service.TokenService;
 import com.mars.common.model.user.User;
 import com.mars.app.domain.user.repository.UserRepository;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -36,6 +36,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     private String clientHost;
 
     private final JwtUtil jwtUtil;
+    private final CookieUtil cookieUtil;
     private final TokenService tokenService;
     private final OAuth2ProviderTokenService oauth2ProviderTokenService;
     private final OAuth2AuthorizedClientManager OAuth2AuthorizedClientManager;
@@ -60,7 +61,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
             return;
         }
 
-        renewOauth2ProviderToken(authentication, email);
+        renewOauth2ProviderToken(authentication, user.getId());
         issueAccessAndRefreshTokens(response, user, email, authentication);
         response.sendRedirect(clientHost);
     }
@@ -71,17 +72,19 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
     private void redirectToErrorPage(HttpServletResponse response, String existingProvider) throws IOException {
         String encodedTitle = URLEncoder.encode("이미 가입된 계정입니다.", StandardCharsets.UTF_8);
-        String encodedDescription = URLEncoder.encode("해당 이메일은 " + existingProvider + " 계정으로 이미 가입되어 있습니다.\n기존 계정으로 로그인하거나 다른 방법을 사용해 주세요.", StandardCharsets.UTF_8);
+        String encodedDescription = URLEncoder.encode(
+            "해당 이메일은 " + existingProvider + " 계정으로 이미 가입되어 있습니다.\n기존 계정으로 로그인하거나 다른 방법을 사용해 주세요.",
+            StandardCharsets.UTF_8);
         response.sendRedirect(clientHost + "/error?title=" + encodedTitle + "&description=" + encodedDescription);
     }
 
-    private void renewOauth2ProviderToken(Authentication authentication, String email) {
+    private void renewOauth2ProviderToken(Authentication authentication, Long userId) {
         OAuth2AuthorizedClient authorizedClient = getOAuth2AuthorizedClient(authentication);
         if (validateAuthorizedClient(authorizedClient)) {
             String refreshToken = authorizedClient.getRefreshToken().getTokenValue();
             String clientName = authorizedClient.getClientRegistration().getClientName();
 
-            oauth2ProviderTokenService.renewOauth2ProviderToken(clientName, refreshToken, email);
+            oauth2ProviderTokenService.renewOauth2ProviderToken(clientName, refreshToken, userId);
         }
     }
 
@@ -89,17 +92,22 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         return authorizedClient != null && authorizedClient.getRefreshToken() != null;
     }
 
-    private void issueAccessAndRefreshTokens(HttpServletResponse response, User user, String email, Authentication authentication) {
+    private void issueAccessAndRefreshTokens(HttpServletResponse response, User user, String email,
+        Authentication authentication) {
         Long userId = user.getId();
         String role = getRole(authentication);
 
-        String access = jwtUtil.createJwt("access", userId, email, role, jwtUtil.getAccessTokenExpireMillis());
-        String refresh = jwtUtil.createJwt("refresh", userId, email, role, jwtUtil.getRefreshTokenExpireMillis());
+        String access = jwtUtil.createJwt(CookieUtil.ACCESS_TOKEN_NAME, userId, email, role,
+            jwtUtil.getAccessTokenExpireMillis());
+        String refresh = jwtUtil.createJwt(CookieUtil.REFRESH_TOKEN_NAME, userId, email, role,
+            jwtUtil.getRefreshTokenExpireMillis());
 
         tokenService.renewRefreshToken(email, refresh);
 
-        response.addCookie(createCookie("access", access, jwtUtil.getAccessTokenExpireMillis(), false));
-        response.addCookie(createCookie("refresh", refresh, jwtUtil.getRefreshTokenExpireMillis(), false));
+        cookieUtil.addCookie(response, CookieUtil.ACCESS_TOKEN_NAME, access, jwtUtil.getAccessTokenExpireMillis(),
+            false);
+        cookieUtil.addCookie(response, CookieUtil.REFRESH_TOKEN_NAME, refresh, jwtUtil.getRefreshTokenExpireMillis(),
+            false);
     }
 
     private String getRole(Authentication authentication) {
@@ -119,14 +127,5 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                 .principal(authentication)
                 .build()
         );
-    }
-
-    private Cookie createCookie(String key, String value, long expireMillis, boolean httpOnly) {
-        Cookie cookie = new Cookie(key, value);
-        cookie.setMaxAge((int) (expireMillis / 1000));
-        cookie.setSecure(true);
-        cookie.setPath("/");
-        cookie.setHttpOnly(httpOnly);
-        return cookie;
     }
 }
