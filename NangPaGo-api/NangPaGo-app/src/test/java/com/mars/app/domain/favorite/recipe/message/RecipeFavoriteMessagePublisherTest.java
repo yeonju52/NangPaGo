@@ -1,14 +1,14 @@
-package com.mars.app.domain.recipe.event;
+package com.mars.app.domain.favorite.recipe.message;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.mars.app.config.rabbitmq.RabbitMQConfig;
-import com.mars.app.domain.recipe.dto.RecipeLikeMessageDto;
-import com.mars.app.domain.recipe.dto.RecipeLikeResponseDto;
+import com.mars.app.domain.favorite.recipe.dto.RecipeFavoriteMessageDto;
+import com.mars.app.domain.favorite.recipe.dto.RecipeFavoriteResponseDto;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,7 +19,7 @@ import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 
 @ExtendWith(MockitoExtension.class)
-class RecipeLikeNotificationPublisherTest {
+class RecipeFavoriteMessagePublisherTest {
 
     @Mock
     private TopicExchange topicExchange;
@@ -27,11 +27,11 @@ class RecipeLikeNotificationPublisherTest {
     private RabbitTemplate rabbitTemplate;
 
     @InjectMocks
-    private RecipeLikeNotificationPublisher recipeLikeNotificationPublisher;
+    private RecipeFavoriteMessagePublisher recipeFavoriteMessagePublisher;
 
-    @DisplayName("레시피 좋아요 토글 이벤트를 발행할 수 있다.")
+    @DisplayName("레시피 즐겨찾기 토글 이벤트를 발행할 수 있다.")
     @Test
-    void toggleLike() {
+    void toggleFavorite() {
         // given
         Long recipeId = 1L;
         Long userId = 1L;
@@ -40,13 +40,13 @@ class RecipeLikeNotificationPublisherTest {
         when(topicExchange.getName()).thenReturn(exchangeName);
 
         // when
-        RecipeLikeResponseDto result = recipeLikeNotificationPublisher.toggleLike(recipeId, userId);
+        RecipeFavoriteResponseDto result = recipeFavoriteMessagePublisher.toggleFavorite(recipeId, userId);
 
         // then
         verify(rabbitTemplate).convertAndSend(
             eq(exchangeName),
-            eq(RabbitMQConfig.LIKE_ROUTING_KEY),
-            any(RecipeLikeMessageDto.class)
+            eq(RabbitMQConfig.RECIPE_FAVORITE_ROUTING_KEY),
+            any(RecipeFavoriteMessageDto.class)
         );
 
         assertThat(result)
@@ -54,7 +54,7 @@ class RecipeLikeNotificationPublisherTest {
             .isEqualTo(recipeId);
     }
 
-    @DisplayName("메시지 발행 시 올바른 DTO가 전송되는지 확인한다.")
+    @DisplayName("레시피 즐겨찾기 메시지 발행 시 올바른 DTO가 전송되는지 확인한다.")
     @Test
     void verifyMessageDto() {
         // given
@@ -65,13 +65,14 @@ class RecipeLikeNotificationPublisherTest {
         when(topicExchange.getName()).thenReturn(exchangeName);
 
         // when
-        recipeLikeNotificationPublisher.toggleLike(recipeId, userId);
+        recipeFavoriteMessagePublisher.toggleFavorite(recipeId, userId);
 
         // then
         verify(rabbitTemplate).convertAndSend(
             eq(exchangeName),
-            eq(RabbitMQConfig.LIKE_ROUTING_KEY),
-            eq(RecipeLikeMessageDto.of(recipeId, userId))
+            eq(RabbitMQConfig.RECIPE_FAVORITE_ROUTING_KEY),
+            eq(RecipeFavoriteMessageDto.of(recipeId, userId))
         );
     }
+
 }
