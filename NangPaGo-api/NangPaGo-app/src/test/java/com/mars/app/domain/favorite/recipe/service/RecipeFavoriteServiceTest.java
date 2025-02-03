@@ -3,10 +3,9 @@ package com.mars.app.domain.favorite.recipe.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.mars.common.dto.PageDto;
-import com.mars.common.exception.NPGException;
+import com.mars.common.dto.page.PageDto;
+import com.mars.common.dto.page.PageRequestVO;
 import com.mars.app.domain.favorite.recipe.dto.RecipeFavoriteListResponseDto;
-import com.mars.app.domain.favorite.recipe.dto.RecipeFavoriteResponseDto;
 import com.mars.common.model.favorite.recipe.RecipeFavorite;
 import com.mars.app.domain.favorite.recipe.repository.RecipeFavoriteRepository;
 import com.mars.common.model.recipe.Recipe;
@@ -94,9 +93,11 @@ class RecipeFavoriteServiceTest extends IntegrationTestSupport {
         recipeRepository.saveAll(recipes);
         recipeFavoriteRepository.saveAll(favorites);
 
+        PageRequestVO pageRequestVO = PageRequestVO.of(1, 12);
+
         // when
         PageDto<RecipeFavoriteListResponseDto> recipeFavorites = recipeFavoriteService.getFavoriteRecipes(
-            user.getId(), 0, 10);
+            user.getId(), pageRequestVO);
 
         //then
         assertThat(recipeFavorites)
