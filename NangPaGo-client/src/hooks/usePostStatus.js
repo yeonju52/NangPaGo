@@ -8,24 +8,16 @@ import {
 } from '../api/postStatus';
 import { useSelector } from 'react-redux';
 
-const usePostStatus = (postType, postId, isLoggedIn) => {
+const usePostStatus = (post, isLoggedIn) => {
   const [isHeartActive, setIsHeartActive] = useState(false);
   const [isStarActive, setIsStarActive] = useState(false);
-  const [likeCount, setLikeCount] = useState(0);
+  const [likeCount, setLikeCount] = useState(null);
   const [modalState, setModalState] = useState({
     type: null,
     data: null,
   });
   const userId = useSelector((state) => state.loginSlice.userId);
   const [isReconnecting, setIsReconnecting] = useState(false);
-
-  const post = useMemo(
-    () => ({
-      type: postType,
-      id: postId,
-    }),
-    [postType, postId],
-  );
 
   const initializeData = useCallback(async () => {
     try {
@@ -35,7 +27,7 @@ const usePostStatus = (postType, postId, isLoggedIn) => {
       if (isLoggedIn) {
         const likeStatus = await fetchLikeStatus(post);
         setIsHeartActive(likeStatus);
-        if (postType === 'recipe') {
+        if (post.type === 'recipe') {
           const favoriteStatus = await fetchFavoriteStatus(post);
           setIsStarActive(favoriteStatus);
         }
@@ -43,7 +35,7 @@ const usePostStatus = (postType, postId, isLoggedIn) => {
     } catch (error) {
       console.error('초기 데이터 가져오기 오류:', error);
     }
-  }, [post, isLoggedIn, postType]);
+  }, [post, isLoggedIn]);
 
   const handleSseError = useCallback(() => {
     if (!isReconnecting) {
@@ -60,11 +52,11 @@ const usePostStatus = (postType, postId, isLoggedIn) => {
 
   useEffect(() => {
     let eventSource = null;
-
+    
     // community 타입일 때는 SSE 구독하지 않음 (개발 중)
-    if (postType !== 'community') {
+    if (post.type !== 'community') {
       eventSource = new EventSource(
-        `/api/${postType}/${postId}/like/notification/subscribe`,
+        `/api/${post.type}/${post.id}/like/notification/subscribe`
       );
 
       const eventName = 'RECIPE_LIKE_EVENT';
@@ -91,7 +83,7 @@ const usePostStatus = (postType, postId, isLoggedIn) => {
         eventSource.close();
       }
     };
-  }, [postType, postId, handleSseError]);
+  }, [post, handleSseError]);
 
   const toggleHeart = async () => {
     if (!isLoggedIn) {
@@ -146,10 +138,10 @@ const usePostStatus = (postType, postId, isLoggedIn) => {
 
   return {
     isHeartActive,
-    isStarActive: postType === 'recipe' ? isStarActive : undefined,
+    isStarActive: post.type === "recipe" ? isStarActive : undefined,
     likeCount,
     toggleHeart,
-    toggleStar: postType === 'recipe' ? toggleStar : undefined,
+    toggleStar: post.type === "recipe" ? toggleStar : undefined,
     modalState,
     setModalState,
   };
