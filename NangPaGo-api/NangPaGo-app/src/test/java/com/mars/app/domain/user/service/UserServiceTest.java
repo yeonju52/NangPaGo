@@ -25,12 +25,14 @@ import com.mars.app.domain.comment.recipe.repository.RecipeCommentRepository;
 import com.mars.app.domain.favorite.recipe.repository.RecipeFavoriteRepository;
 import com.mars.app.domain.recipe.repository.RecipeLikeRepository;
 import com.mars.app.domain.user.repository.UserRepository;
+import jakarta.transaction.Transactional;
+import java.util.ArrayList;
 import java.util.List;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+@Transactional
 class UserServiceTest extends IntegrationTestSupport {
 
     @Autowired
@@ -46,14 +48,6 @@ class UserServiceTest extends IntegrationTestSupport {
 
     @Autowired
     private UserService userService;
-
-    @AfterEach
-    void tearDown() {
-        recipeLikeRepository.deleteAllInBatch();
-        recipeFavoriteRepository.deleteAllInBatch();
-        recipeCommentRepository.deleteAllInBatch();
-        userRepository.deleteAllInBatch();
-    }
 
     @DisplayName("현재 사용자 정보를 조회할 수 있다.")
     @Test
@@ -306,6 +300,8 @@ class UserServiceTest extends IntegrationTestSupport {
             .calorie(100)
             .category("레시피 카테고리")
             .cookingMethod("조리방법")
+            .manuals(new ArrayList<>())
+            .manualImages(new ArrayList<>())
             .build();
     }
 }
