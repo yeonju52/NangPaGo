@@ -5,8 +5,12 @@ import com.mars.admin.domain.user.dto.UserDetailResponseDto;
 import com.mars.admin.domain.user.service.UserService;
 import com.mars.admin.domain.user.sort.UserListSortType;
 import com.mars.common.dto.ResponseDto;
+import com.mars.common.dto.page.PageRequestVO;
+import com.mars.common.dto.page.PageResponseDto;
+import com.mars.common.enums.oauth.OAuth2Provider;
+import com.mars.common.enums.user.UserStatus;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
@@ -29,8 +33,12 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseDto<Page<UserDetailResponseDto>> userList(@RequestParam(defaultValue = "0") int pageNo,
-                                                             @RequestParam(defaultValue = "ID_ASC") UserListSortType sort) {
-        return ResponseDto.of(userService.getUserList(pageNo, sort), "");
+    public ResponseDto<PageResponseDto<UserDetailResponseDto>> userList(
+        PageRequestVO pageRequestVO,
+        @RequestParam(defaultValue = "ID_ASC") UserListSortType sort,
+        @RequestParam(required = false) List<UserStatus> statuses,
+        @RequestParam(required = false) List<OAuth2Provider> providers
+    ) {
+        return ResponseDto.of(userService.getUserList(pageRequestVO, sort, statuses, providers));
     }
 }
