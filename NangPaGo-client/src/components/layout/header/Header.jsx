@@ -3,8 +3,9 @@ import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../../../slices/loginSlice.js';
 import axiosInstance from '../../../api/axiosInstance.js';
 import { CgSmartHomeRefrigerator } from 'react-icons/cg';
-import { BsFilePost } from 'react-icons/bs';
-import { FaRegUser } from 'react-icons/fa';
+import { CgList } from "react-icons/cg";
+import { CgProfile } from "react-icons/cg";
+import { CgLogIn } from "react-icons/cg";
 import { useState, useRef, useEffect } from 'react';
 import ProfileDropdown from './ProfileDropdown.jsx';
 import NavItem from './NavItem.jsx';
@@ -71,7 +72,7 @@ function Header({ isBlocked = false }) {
   }
 
   return (
-    <header className="sticky top-0 z-10 bg-white shadow-md w-full px-1 py-2 mb-4">
+    <header className="sticky top-0 z-50 bg-white shadow-md w-full px-1 py-2 mb-4">
       <div className="flex flex-row items-center justify-between px-4">
         <div className="flex items-center justify-center w-17 h-17">
           <img
@@ -95,7 +96,7 @@ function Header({ isBlocked = false }) {
             to="/community"
             isActive={isActive('/community')}
             label="커뮤니티"
-            Icon={BsFilePost}
+            Icon={CgList}
             onClick={() => handleLinkClick('/community')}
           />
           {loginState.isLoggedIn ? (
@@ -106,7 +107,7 @@ function Header({ isBlocked = false }) {
               handleLogout={handleLogout}
               handleLinkClick={handleLinkClick}
               isActive={isActive('/my-page')}
-              icon={FaRegUser}
+              icon={CgProfile}
               nickname={loginState.nickname}
             />
           ) : (
@@ -114,7 +115,7 @@ function Header({ isBlocked = false }) {
               to="/login"
               isActive={isActive('/login')}
               label="로그인"
-              Icon={FaRegUser}
+              Icon={CgLogIn}
               onClick={() => handleLinkClick('/login')}
             />
           )}

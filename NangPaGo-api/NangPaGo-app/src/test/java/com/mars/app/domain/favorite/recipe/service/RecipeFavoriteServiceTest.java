@@ -1,12 +1,10 @@
 package com.mars.app.domain.favorite.recipe.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.mars.common.dto.PageDto;
-import com.mars.common.exception.NPGException;
+import com.mars.common.dto.page.PageResponseDto;
+import com.mars.common.dto.page.PageRequestVO;
 import com.mars.app.domain.favorite.recipe.dto.RecipeFavoriteListResponseDto;
-import com.mars.app.domain.favorite.recipe.dto.RecipeFavoriteResponseDto;
 import com.mars.common.model.favorite.recipe.RecipeFavorite;
 import com.mars.app.domain.favorite.recipe.repository.RecipeFavoriteRepository;
 import com.mars.common.model.recipe.Recipe;
@@ -16,11 +14,12 @@ import com.mars.app.domain.user.repository.UserRepository;
 import com.mars.app.support.IntegrationTestSupport;
 import java.util.Arrays;
 import java.util.List;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
+@Transactional
 class RecipeFavoriteServiceTest extends IntegrationTestSupport {
 
     @Autowired
@@ -32,13 +31,6 @@ class RecipeFavoriteServiceTest extends IntegrationTestSupport {
 
     @Autowired
     private RecipeFavoriteService recipeFavoriteService;
-
-    @AfterEach
-    void tearDown() {
-        recipeFavoriteRepository.deleteAllInBatch();
-        recipeRepository.deleteAllInBatch();
-        userRepository.deleteAllInBatch();
-    }
 
     @DisplayName("즐겨찾기한 레시피의 즐겨찾기 상태는 true 이다.")
     @Test
@@ -94,13 +86,15 @@ class RecipeFavoriteServiceTest extends IntegrationTestSupport {
         recipeRepository.saveAll(recipes);
         recipeFavoriteRepository.saveAll(favorites);
 
+        PageRequestVO pageRequestVO = PageRequestVO.of(1, 12);
+
         // when
-        PageDto<RecipeFavoriteListResponseDto> recipeFavorites = recipeFavoriteService.getFavoriteRecipes(
-            user.getId(), 0, 10);
+        PageResponseDto<RecipeFavoriteListResponseDto> recipeFavorites = recipeFavoriteService.getFavoriteRecipes(
+            user.getId(), pageRequestVO);
 
         //then
         assertThat(recipeFavorites)
-            .extracting(PageDto::getTotalPages, PageDto::getTotalItems)
+            .extracting(PageResponseDto::getTotalPages, PageResponseDto::getTotalItems)
             .containsExactly(1, 4L);
         assertThat(recipeFavorites.getContent().get(1).name()).isEqualTo("순대국밥");
     }

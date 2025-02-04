@@ -3,7 +3,8 @@ package com.mars.app.domain.comment.recipe.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.mars.common.dto.PageDto;
+import com.mars.common.dto.page.PageResponseDto;
+import com.mars.common.dto.page.PageRequestVO;
 import com.mars.common.exception.NPGException;
 import com.mars.app.domain.comment.recipe.dto.RecipeCommentRequestDto;
 import com.mars.app.domain.comment.recipe.dto.RecipeCommentResponseDto;
@@ -16,11 +17,12 @@ import com.mars.app.domain.user.repository.UserRepository;
 import com.mars.app.support.IntegrationTestSupport;
 import java.util.Arrays;
 import java.util.List;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
+@Transactional
 class RecipeCommentServiceTest extends IntegrationTestSupport {
 
     @Autowired
@@ -33,41 +35,34 @@ class RecipeCommentServiceTest extends IntegrationTestSupport {
     @Autowired
     private RecipeCommentService recipeCommentService;
 
-    @AfterEach
-    void tearDown() {
-        recipeCommentRepository.deleteAllInBatch();
-        recipeRepository.deleteAllInBatch();
-        userRepository.deleteAllInBatch();
-    }
-
     @DisplayName("레시피의 모든 댓글을 조회한다.")
     @Test
     void pagedCommentsByRecipe() {
         // given
-        int pageNo = 0;
-        int pageSize = 3;
-
         User user = createUser("dummy@nangpago.com", "TestNickName");
         Recipe recipe = createRecipe("파스타");
         List<RecipeComment> comments = Arrays.asList(
             createRecipeComment(recipe, user, "1번째 댓글"),
             createRecipeComment(recipe, user, "2번째 댓글"),
             createRecipeComment(recipe, user, "3번째 댓글"),
-            createRecipeComment(recipe, user, "4번째 댓글")
+            createRecipeComment(recipe, user, "4번째 댓글"),
+            createRecipeComment(recipe, user, "5번째 댓글")
         );
 
         userRepository.save(user);
         recipeRepository.save(recipe);
         recipeCommentRepository.saveAll(comments);
 
+        PageRequestVO pageRequestVO = new PageRequestVO(1, 5);
+
         // when
-        PageDto<RecipeCommentResponseDto> pageDto = recipeCommentService.pagedCommentsByRecipe(recipe.getId(),
-            user.getId(), pageNo, pageSize);
+        PageResponseDto<RecipeCommentResponseDto> pageDto = recipeCommentService.pagedCommentsByRecipe(recipe.getId(),
+            user.getId(), pageRequestVO);
 
         //then
         assertThat(pageDto)
-            .extracting(PageDto::getTotalPages, PageDto::getTotalItems)
-            .containsExactly(2, 4L);
+            .extracting(PageResponseDto::getTotalPages, PageResponseDto::getTotalItems)
+            .containsExactly(1, 5L);
     }
 
     @DisplayName("레시피에 댓글을 작성할 수 있다.")

@@ -9,18 +9,20 @@ import com.mars.app.domain.comment.community.repository.CommunityCommentReposito
 import com.mars.app.domain.community.repository.CommunityRepository;
 import com.mars.app.domain.user.repository.UserRepository;
 import com.mars.app.support.IntegrationTestSupport;
-import com.mars.common.dto.PageDto;
+import com.mars.common.dto.page.PageResponseDto;
+import com.mars.common.dto.page.PageRequestVO;
 import com.mars.common.exception.NPGException;
 import com.mars.common.model.comment.community.CommunityComment;
 import com.mars.common.model.community.Community;
 import com.mars.common.model.user.User;
 import java.util.Arrays;
 import java.util.List;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
+@Transactional
 class CommunityCommentServiceTest extends IntegrationTestSupport {
 
     @Autowired
@@ -32,13 +34,6 @@ class CommunityCommentServiceTest extends IntegrationTestSupport {
 
     @Autowired
     private CommunityCommentService communityCommentService;
-
-    @AfterEach
-    void tearDown() {
-        communityCommentRepository.deleteAllInBatch();
-        communityRepository.deleteAllInBatch();
-        userRepository.deleteAllInBatch();
-    }
 
     @DisplayName("게시글의 모든 댓글을 조회할 수 있다.")
     @Test
@@ -60,13 +55,16 @@ class CommunityCommentServiceTest extends IntegrationTestSupport {
         communityRepository.save(community);
         communityCommentRepository.saveAll(comments);
 
+        PageRequestVO pageRequestVO = PageRequestVO.of(1, 3);
+
         // when
-        PageDto<CommunityCommentResponseDto> pageDto = communityCommentService.pagedCommentsByCommunity(
-            community.getId(), user.getId(), pageNo, pageSize);
+        PageResponseDto<CommunityCommentResponseDto> pageDto = communityCommentService.pagedCommentsByCommunity(
+            community.getId(), user.getId(), pageRequestVO);
+
 
         // then
         assertThat(pageDto)
-            .extracting(PageDto::getTotalPages, PageDto::getTotalItems)
+            .extracting(PageResponseDto::getTotalPages, PageResponseDto::getTotalItems)
             .containsExactly(2, 4L);
     }
 

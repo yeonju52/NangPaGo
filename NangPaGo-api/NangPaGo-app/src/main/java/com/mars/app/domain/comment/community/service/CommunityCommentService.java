@@ -4,11 +4,11 @@ import static com.mars.common.exception.NPGExceptionType.NOT_FOUND_COMMUNITY;
 import static com.mars.common.exception.NPGExceptionType.NOT_FOUND_COMMUNITY_COMMENT;
 import static com.mars.common.exception.NPGExceptionType.NOT_FOUND_USER;
 import static com.mars.common.exception.NPGExceptionType.UNAUTHORIZED_NO_AUTHENTICATION_CONTEXT;
-import static org.springframework.data.domain.Sort.Direction.DESC;
 
-import com.mars.common.dto.PageDto;
+import com.mars.common.dto.page.PageResponseDto;
 import com.mars.app.domain.comment.community.dto.CommunityCommentRequestDto;
 import com.mars.app.domain.comment.community.dto.CommunityCommentResponseDto;
+import com.mars.common.dto.page.PageRequestVO;
 import com.mars.common.model.comment.community.CommunityComment;
 import com.mars.app.domain.comment.community.repository.CommunityCommentRepository;
 import com.mars.common.model.community.Community;
@@ -16,8 +16,6 @@ import com.mars.app.domain.community.repository.CommunityRepository;
 import com.mars.common.model.user.User;
 import com.mars.app.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,14 +28,13 @@ public class CommunityCommentService {
     private final CommunityRepository communityRepository;
     private final UserRepository userRepository;
 
-    public PageDto<CommunityCommentResponseDto> pagedCommentsByCommunity(Long communityId,
+    public PageResponseDto<CommunityCommentResponseDto> pagedCommentsByCommunity(
+        Long communityId,
         Long userId,
-        int pageNo,
-        int pageSize) {
-
+        PageRequestVO pageRequestVO
+    ) {
         validateCommunity(communityId);
-        return PageDto.of(
-            communityCommentRepository.findByCommunityId(communityId, createPageRequest(pageNo, pageSize))
+        return PageResponseDto.of(communityCommentRepository.findByCommunityId(communityId, pageRequestVO.toPageable())
                 .map(comment -> CommunityCommentResponseDto.of(comment, userId))
         );
     }
@@ -82,7 +79,4 @@ public class CommunityCommentService {
             .orElseThrow(NOT_FOUND_COMMUNITY_COMMENT::of);
     }
 
-    private PageRequest createPageRequest(int pageNo, int pageSize) {
-        return PageRequest.of(pageNo, pageSize, Sort.by(DESC, "createdAt"));
-    }
 }

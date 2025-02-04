@@ -2,20 +2,15 @@ package com.mars.app.domain.favorite.recipe.service;
 
 import com.mars.app.domain.comment.recipe.repository.RecipeCommentRepository;
 import com.mars.app.domain.recipe.repository.RecipeLikeRepository;
-import com.mars.common.dto.PageDto;
+import com.mars.common.dto.page.PageResponseDto;
+import com.mars.common.dto.page.PageRequestVO;
 import com.mars.common.exception.NPGExceptionType;
 import com.mars.app.domain.favorite.recipe.dto.RecipeFavoriteListResponseDto;
-import com.mars.app.domain.favorite.recipe.dto.RecipeFavoriteResponseDto;
-import com.mars.common.model.favorite.recipe.RecipeFavorite;
 import com.mars.app.domain.favorite.recipe.repository.RecipeFavoriteRepository;
 import com.mars.common.model.recipe.Recipe;
-import com.mars.app.domain.recipe.repository.RecipeRepository;
 import com.mars.common.model.user.User;
 import com.mars.app.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,12 +28,12 @@ public class RecipeFavoriteService {
         return recipeFavoriteRepository.findByUserIdAndRecipeId(userId, recipeId).isPresent();
     }
 
-    public PageDto<RecipeFavoriteListResponseDto> getFavoriteRecipes(Long userId, int pageNo, int pageSize) {
+    public PageResponseDto<RecipeFavoriteListResponseDto> getFavoriteRecipes(Long userId, PageRequestVO pageRequestVO) {
         User user = userRepository.findById(userId)
             .orElseThrow(NPGExceptionType.NOT_FOUND_USER::of);
 
-        return PageDto.of(
-            recipeFavoriteRepository.findAllByUser(user, PageRequest.of(pageNo, pageSize))
+        return PageResponseDto.of(
+            recipeFavoriteRepository.findAllByUser(user, pageRequestVO.toPageable())
                 .map(favorite -> {
                     Recipe recipe = favorite.getRecipe();
                     int likeCount = recipeLikeRepository.countByRecipeId(recipe.getId());

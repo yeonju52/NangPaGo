@@ -4,11 +4,11 @@ import static com.mars.common.exception.NPGExceptionType.NOT_FOUND_COMMENT;
 import static com.mars.common.exception.NPGExceptionType.NOT_FOUND_RECIPE;
 import static com.mars.common.exception.NPGExceptionType.NOT_FOUND_USER;
 import static com.mars.common.exception.NPGExceptionType.UNAUTHORIZED_NO_AUTHENTICATION_CONTEXT;
-import static org.springframework.data.domain.Sort.Direction.DESC;
 
-import com.mars.common.dto.PageDto;
+import com.mars.common.dto.page.PageResponseDto;
 import com.mars.app.domain.comment.recipe.dto.RecipeCommentRequestDto;
 import com.mars.app.domain.comment.recipe.dto.RecipeCommentResponseDto;
+import com.mars.common.dto.page.PageRequestVO;
 import com.mars.common.model.comment.recipe.RecipeComment;
 import com.mars.app.domain.comment.recipe.repository.RecipeCommentRepository;
 import com.mars.common.model.recipe.Recipe;
@@ -16,8 +16,6 @@ import com.mars.app.domain.recipe.repository.RecipeRepository;
 import com.mars.common.model.user.User;
 import com.mars.app.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,10 +28,9 @@ public class RecipeCommentService {
     private final RecipeRepository recipeRepository;
     private final UserRepository userRepository;
 
-    public PageDto<RecipeCommentResponseDto> pagedCommentsByRecipe(Long recipeId, Long userId, int pageNo, int pageSize) {
+    public PageResponseDto<RecipeCommentResponseDto> pagedCommentsByRecipe(Long recipeId, Long userId, PageRequestVO pageRequestVO) {
         Recipe recipe = findRecipeById(recipeId);
-        return PageDto.of(
-            recipeCommentRepository.findByRecipeId(recipeId, createPageRequest(pageNo, pageSize))
+        return PageResponseDto.of(recipeCommentRepository.findByRecipeId(recipeId, pageRequestVO.toPageable())
                 .map(comment -> RecipeCommentResponseDto.from(comment, recipe, userId))
         );
     }
@@ -83,9 +80,5 @@ public class RecipeCommentService {
     private RecipeComment findCommentById(Long commentId) {
         return recipeCommentRepository.findById(commentId)
             .orElseThrow(() -> NOT_FOUND_COMMENT.of("댓글을 찾을 수 없습니다."));
-    }
-
-    private PageRequest createPageRequest(int pageNo, int pageSize) {
-        return PageRequest.of(pageNo, pageSize, Sort.by(DESC, "createdAt"));
     }
 }

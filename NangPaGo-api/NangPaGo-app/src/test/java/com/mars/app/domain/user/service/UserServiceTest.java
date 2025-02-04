@@ -8,7 +8,8 @@ import com.mars.app.domain.favorite.recipe.dto.RecipeFavoriteListResponseDto;
 import com.mars.app.domain.recipe.dto.RecipeResponseDto;
 import com.mars.app.domain.recipe.repository.RecipeRepository;
 import com.mars.app.support.IntegrationTestSupport;
-import com.mars.common.dto.PageDto;
+import com.mars.common.dto.page.PageResponseDto;
+import com.mars.common.dto.page.PageRequestVO;
 import com.mars.common.dto.user.MyPageDto;
 import com.mars.common.dto.user.UserInfoRequestDto;
 import com.mars.common.dto.user.UserInfoResponseDto;
@@ -24,12 +25,14 @@ import com.mars.app.domain.comment.recipe.repository.RecipeCommentRepository;
 import com.mars.app.domain.favorite.recipe.repository.RecipeFavoriteRepository;
 import com.mars.app.domain.recipe.repository.RecipeLikeRepository;
 import com.mars.app.domain.user.repository.UserRepository;
+import jakarta.transaction.Transactional;
+import java.util.ArrayList;
 import java.util.List;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+@Transactional
 class UserServiceTest extends IntegrationTestSupport {
 
     @Autowired
@@ -45,14 +48,6 @@ class UserServiceTest extends IntegrationTestSupport {
 
     @Autowired
     private UserService userService;
-
-    @AfterEach
-    void tearDown() {
-        recipeLikeRepository.deleteAllInBatch();
-        recipeFavoriteRepository.deleteAllInBatch();
-        recipeCommentRepository.deleteAllInBatch();
-        userRepository.deleteAllInBatch();
-    }
 
     @DisplayName("현재 사용자 정보를 조회할 수 있다.")
     @Test
@@ -136,12 +131,14 @@ class UserServiceTest extends IntegrationTestSupport {
         RecipeLike recipeLike2 = RecipeLike.of(user, recipe2);
         recipeLikeRepository.saveAll(List.of(recipeLike1, recipeLike2));
 
+        PageRequestVO pageRequestVO = PageRequestVO.of(1, 12);
+
         // when
-        PageDto<RecipeResponseDto> myLikedRecipes = userService.getMyLikedRecipes(user.getId(), 0, 10);
+        PageResponseDto<RecipeResponseDto> myLikedRecipes = userService.getMyLikedRecipes(user.getId(), pageRequestVO);
 
         // then
         assertThat(myLikedRecipes)
-            .extracting(PageDto::getTotalPages, PageDto::getTotalItems)
+            .extracting(PageResponseDto::getTotalPages, PageResponseDto::getTotalItems)
             .containsExactly(1, 2L);
         assertThat(myLikedRecipes.getContent())
             .extracting(RecipeResponseDto::name)
@@ -166,12 +163,14 @@ class UserServiceTest extends IntegrationTestSupport {
         RecipeFavorite recipeFavorite2 = RecipeFavorite.of(user, recipe2);
         recipeFavoriteRepository.saveAll(List.of(recipeFavorite1, recipeFavorite2));
 
+        PageRequestVO pageRequestVO = PageRequestVO.of(1, 12);
+
         // when
-        PageDto<RecipeFavoriteListResponseDto> myFavorites = userService.getMyFavorites(user.getId(), 0, 10);
+        PageResponseDto<RecipeFavoriteListResponseDto> myFavorites = userService.getMyFavorites(user.getId(), pageRequestVO);
 
         // then
         assertThat(myFavorites)
-            .extracting(PageDto::getTotalPages, PageDto::getTotalItems)
+            .extracting(PageResponseDto::getTotalPages, PageResponseDto::getTotalItems)
             .containsExactly(1, 2L);
         assertThat(myFavorites.getContent())
             .extracting(RecipeFavoriteListResponseDto::name)
@@ -195,12 +194,14 @@ class UserServiceTest extends IntegrationTestSupport {
         RecipeComment recipeComment2 = RecipeComment.create(recipe, user, "테스트 댓글 2");
         recipeCommentRepository.saveAll(List.of(recipeComment1, recipeComment2));
 
+        PageRequestVO pageRequestVO = PageRequestVO.of(1, 12);
+
         // when
-        PageDto<RecipeCommentResponseDto> myComments = userService.getMyComments(user.getId(), 0, 10);
+        PageResponseDto<RecipeCommentResponseDto> myComments = userService.getMyComments(user.getId(), pageRequestVO);
 
         // then
         assertThat(myComments)
-            .extracting(PageDto::getTotalPages, PageDto::getTotalItems)
+            .extracting(PageResponseDto::getTotalPages, PageResponseDto::getTotalItems)
             .containsExactly(1, 2L);
         assertThat(myComments.getContent())
             .extracting(RecipeCommentResponseDto::content)
@@ -299,6 +300,8 @@ class UserServiceTest extends IntegrationTestSupport {
             .calorie(100)
             .category("레시피 카테고리")
             .cookingMethod("조리방법")
+            .manuals(new ArrayList<>())
+            .manualImages(new ArrayList<>())
             .build();
     }
 }

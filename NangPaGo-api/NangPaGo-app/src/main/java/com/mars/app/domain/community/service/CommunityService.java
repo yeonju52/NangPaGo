@@ -3,12 +3,12 @@ package com.mars.app.domain.community.service;
 import static com.mars.common.exception.NPGExceptionType.NOT_FOUND_COMMUNITY;
 import static com.mars.common.exception.NPGExceptionType.NOT_FOUND_USER;
 import static com.mars.common.exception.NPGExceptionType.UNAUTHORIZED_NO_AUTHENTICATION_CONTEXT;
-import static org.springframework.data.domain.Sort.Direction.DESC;
 
-import com.mars.common.dto.PageDto;
+import com.mars.common.dto.page.PageResponseDto;
 import com.mars.app.domain.comment.community.repository.CommunityCommentRepository;
 import com.mars.app.domain.community.dto.CommunityRequestDto;
 import com.mars.app.domain.community.dto.CommunityResponseDto;
+import com.mars.common.dto.page.PageRequestVO;
 import com.mars.common.model.community.Community;
 import com.mars.app.domain.community.repository.CommunityLikeRepository;
 import com.mars.app.domain.community.repository.CommunityRepository;
@@ -16,9 +16,6 @@ import com.mars.app.domain.firebase.service.FirebaseStorageService;
 import com.mars.common.model.user.User;
 import com.mars.app.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -44,11 +41,8 @@ public class CommunityService {
         return CommunityResponseDto.of(community, userId);
     }
 
-    public PageDto<CommunityResponseDto> pagesByCommunity(int pageNo, int pageSize, Long userId) {
-        Pageable pageable = createPageRequest(pageNo, pageSize);
-
-        return PageDto.of(
-            (communityRepository.findByIsPublicTrueOrUserId(userId, pageable))
+    public PageResponseDto<CommunityResponseDto> pagesByCommunity(Long userId, PageRequestVO pageRequestVO) {
+        return PageResponseDto.of((communityRepository.findByIsPublicTrueOrUserId(userId, pageRequestVO.toPageable()))
                 .map(community -> {
                     int likeCount = communityLikeRepository.countByCommunityId(community.getId());
                     int commentCount = communityCommentRepository.countByCommunityId(community.getId());
@@ -129,9 +123,5 @@ public class CommunityService {
         if (!community.getUser().getId().equals(userId)) {
             throw UNAUTHORIZED_NO_AUTHENTICATION_CONTEXT.of("게시물을 수정/삭제할 권한이 없습니다.");
         }
-    }
-
-    private PageRequest createPageRequest(int pageNo, int pageSize) {
-        return PageRequest.of(pageNo, pageSize, Sort.by(DESC, "createdAt"));
     }
 }

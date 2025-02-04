@@ -1,8 +1,13 @@
 import axiosInstance from './axiosInstance';
 
-export const getUserList = async (page) => {
+export const getUserList = async (pageNo, sortType) => {
   try {
-    const response = await axiosInstance.get(`/api/user?page=${page}`);
+    const response = await axiosInstance.get(`/api/user`, {
+      params: {
+        pageNo,
+        sort: sortType
+      }
+    });
     return response.data;
   } catch (error) {
     throw new Error(
