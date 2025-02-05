@@ -1,9 +1,11 @@
 package com.mars.admin.domain.user.service;
 
-import static com.mars.admin.domain.user.sort.UserListSortType.ID_ASC;
-import static com.mars.admin.domain.user.sort.UserListSortType.ID_DESC;
-import static com.mars.admin.domain.user.sort.UserListSortType.NICKNAME_ASC;
-import static com.mars.admin.domain.user.sort.UserListSortType.NICKNAME_DESC;
+import static com.mars.admin.domain.user.enums.UserListSearchType.EMAIL;
+import static com.mars.admin.domain.user.enums.UserListSearchType.NICKNAME;
+import static com.mars.admin.domain.user.enums.UserListSortType.ID_ASC;
+import static com.mars.admin.domain.user.enums.UserListSortType.ID_DESC;
+import static com.mars.admin.domain.user.enums.UserListSortType.NICKNAME_ASC;
+import static com.mars.admin.domain.user.enums.UserListSortType.NICKNAME_DESC;
 import static com.mars.common.enums.oauth.OAuth2Provider.GOOGLE;
 import static com.mars.common.enums.oauth.OAuth2Provider.KAKAO;
 import static com.mars.common.enums.oauth.OAuth2Provider.NAVER;
@@ -30,6 +32,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -88,7 +91,8 @@ class UserServiceTest extends IntegrationTestSupport {
 
         PageRequestVO pageRequestVO = PageRequestVO.of(1, 10);
         // when
-        PageResponseDto<UserDetailResponseDto> result = userService.getUserList(pageRequestVO, ID_ASC, null, null);
+        PageResponseDto<UserDetailResponseDto> result = userService.getUserList(pageRequestVO, ID_ASC, null, null, null,
+            null);
 
         // then
         assertThat(result.getContent().size()).isEqualTo(10);
@@ -107,9 +111,9 @@ class UserServiceTest extends IntegrationTestSupport {
 
         // when
         PageResponseDto<UserDetailResponseDto> firstPage = userService.getUserList(PageRequestVO.of(1, 10), ID_DESC,
-            null, null);
+            null, null, null, null);
         PageResponseDto<UserDetailResponseDto> secondPage = userService.getUserList(PageRequestVO.of(2, 10), ID_DESC,
-            null, null);
+            null, null, null, null);
 
         // then
         assertThat(firstPage.getContent().get(0).id()).isGreaterThan(secondPage.getContent().get(4).id());
@@ -126,9 +130,9 @@ class UserServiceTest extends IntegrationTestSupport {
 
         // when
         PageResponseDto<UserDetailResponseDto> firstPage = userService.getUserList(PageRequestVO.of(1, 10), ID_ASC,
-            null, null);
+            null, null, null, null);
         PageResponseDto<UserDetailResponseDto> secondPage = userService.getUserList(PageRequestVO.of(2, 10), ID_ASC,
-            null, null);
+            null, null, null, null);
 
         // then
         System.out.println(firstPage.getContent().get(0).id());
@@ -148,9 +152,9 @@ class UserServiceTest extends IntegrationTestSupport {
 
         // when
         PageResponseDto<UserDetailResponseDto> firstPage = userService
-            .getUserList(PageRequestVO.of(1, 10), NICKNAME_DESC, null, null);
+            .getUserList(PageRequestVO.of(1, 10), NICKNAME_DESC, null, null, null, null);
         PageResponseDto<UserDetailResponseDto> secondPage = userService
-            .getUserList(PageRequestVO.of(2, 10), NICKNAME_DESC, null, null);
+            .getUserList(PageRequestVO.of(2, 10), NICKNAME_DESC, null, null, null, null);
 
         // then
         assertThat(firstPage.getContent().get(0).nickname()).isEqualTo("nickname14");
@@ -169,9 +173,9 @@ class UserServiceTest extends IntegrationTestSupport {
 
         // when
         PageResponseDto<UserDetailResponseDto> firstPage = userService
-            .getUserList(PageRequestVO.of(1, 10), NICKNAME_ASC, null, null);
+            .getUserList(PageRequestVO.of(1, 10), NICKNAME_ASC, null, null, null, null);
         PageResponseDto<UserDetailResponseDto> secondPage = userService
-            .getUserList(PageRequestVO.of(2, 10), NICKNAME_ASC, null, null);
+            .getUserList(PageRequestVO.of(2, 10), NICKNAME_ASC, null, null, null, null);
 
         // then
         assertThat(firstPage.getContent().get(0).nickname()).isEqualTo("nickname0");
@@ -195,7 +199,7 @@ class UserServiceTest extends IntegrationTestSupport {
 
         // when
         PageResponseDto<UserDetailResponseDto> firstPage = userService
-            .getUserList(PageRequestVO.of(1, 10), NICKNAME_ASC, userStatuses, null);
+            .getUserList(PageRequestVO.of(1, 10), NICKNAME_ASC, userStatuses, null, null, null);
 
         // then
         assertThat(firstPage.getContent().get(0).nickname()).isEqualTo("nickname7");
@@ -221,7 +225,7 @@ class UserServiceTest extends IntegrationTestSupport {
         List<OAuth2Provider> oAuth2Providers = List.of(NAVER);
         // when
         PageResponseDto<UserDetailResponseDto> firstPage = userService
-            .getUserList(PageRequestVO.of(1, 10), NICKNAME_ASC, null, oAuth2Providers);
+            .getUserList(PageRequestVO.of(1, 10), NICKNAME_ASC, null, oAuth2Providers, null, null);
 
         // then
         assertThat(firstPage.getContent().get(0).nickname()).isEqualTo("nickname10");
@@ -254,7 +258,7 @@ class UserServiceTest extends IntegrationTestSupport {
 
         // when
         PageResponseDto<UserDetailResponseDto> firstPage = userService
-            .getUserList(PageRequestVO.of(1, 10), NICKNAME_ASC, userStatuses, oAuth2Providers);
+            .getUserList(PageRequestVO.of(1, 10), NICKNAME_ASC, userStatuses, oAuth2Providers, null, null);
 
         // then
         assertAll("닉네임 검증",
@@ -291,7 +295,7 @@ class UserServiceTest extends IntegrationTestSupport {
 
         // when
         PageResponseDto<UserDetailResponseDto> firstPage = userService
-            .getUserList(PageRequestVO.of(1, 10), NICKNAME_DESC, userStatuses, oAuth2Providers);
+            .getUserList(PageRequestVO.of(1, 10), NICKNAME_DESC, userStatuses, oAuth2Providers, null, null);
 
         // then
         assertAll("닉네임 검증",
@@ -328,7 +332,7 @@ class UserServiceTest extends IntegrationTestSupport {
 
         // when
         PageResponseDto<UserDetailResponseDto> firstPage = userService
-            .getUserList(PageRequestVO.of(1, 10), ID_DESC, userStatuses, oAuth2Providers);
+            .getUserList(PageRequestVO.of(1, 10), ID_DESC, userStatuses, oAuth2Providers, null, null);
 
         // then
         assertAll("닉네임 검증",
@@ -345,9 +349,9 @@ class UserServiceTest extends IntegrationTestSupport {
         // given
         List<User> users = new ArrayList<>(
             IntStream.range(0, 4)
-            .mapToObj(i -> createUser("test" + i + "@example.com"
-                , "nickname" + i, GOOGLE))
-            .toList());
+                .mapToObj(i -> createUser("test" + i + "@example.com"
+                    , "nickname" + i, GOOGLE))
+                .toList());
         users.addAll(IntStream.range(4, 8)
             .mapToObj(i -> createUser("test" + i + "@example.com"
                 , "nickname" + i, KAKAO))
@@ -371,7 +375,7 @@ class UserServiceTest extends IntegrationTestSupport {
 
         // when
         PageResponseDto<UserDetailResponseDto> firstPage = userService
-            .getUserList(PageRequestVO.of(1, 10), ID_DESC, userStatuses, oAuth2Providers);
+            .getUserList(PageRequestVO.of(1, 10), ID_DESC, userStatuses, oAuth2Providers, null, null);
 
         // then
         assertAll("닉네임 검증",
@@ -380,6 +384,76 @@ class UserServiceTest extends IntegrationTestSupport {
         );
         assertThat(firstPage.getTotalItems()).isEqualTo(4);
         assertEquals(WITHDRAWN, firstPage.getContent().get(3).userStatus());
+    }
+
+    @DisplayName("사용자 목록에서 이메일를 검색할 수 있다.")
+    @Test
+    void getUserListSearchEmail() {
+        // given
+        List<User> users = IntStream.range(0, 15)
+            .mapToObj(i -> createUser("test" + i + "@example.com", "nickname", GOOGLE))
+            .collect(Collectors.toList());
+        userRepository.saveAll(users);
+
+        PageRequestVO pageRequestVO = PageRequestVO.of(1, 10);
+        // when
+        PageResponseDto<UserDetailResponseDto> result = userService.getUserList(pageRequestVO, ID_ASC, null, null,
+            EMAIL, "test1");
+
+        // then
+        assertThat(result.getContent().get(0).email()).isEqualTo("test1@example.com");
+    }
+
+    @DisplayName("사용자 목록에서 닉네임를 검색할 수 있다.")
+    @Test
+    void getUserListSearchNickname() {
+        // given
+        List<User> users = IntStream.range(0, 15)
+            .mapToObj(i -> createUser("test" + i + "@example.com", "nickname" + i, GOOGLE))
+            .collect(Collectors.toList());
+        userRepository.saveAll(users);
+
+        PageRequestVO pageRequestVO = PageRequestVO.of(1, 10);
+        // when
+        PageResponseDto<UserDetailResponseDto> result = userService.getUserList(pageRequestVO, ID_ASC, null, null,
+            NICKNAME, "nickname1");
+
+        // then
+        assertThat(result.getContent().get(1).nickname()).isEqualTo("nickname10");
+    }
+
+    @DisplayName("사용자 목록에서 여러 조건 필터를 적용한 상태로 닉네임을 내림차순으로 검색할 수 있다.")
+    @Test
+    void getUserListSearchNicknameAndFiltersDesc() {
+        // given
+        List<User> users = Stream.of(GOOGLE, KAKAO, NAVER)
+            .flatMap(provider -> IntStream.range(0, 4)
+                .mapToObj(i -> {
+                    int index = provider.ordinal() * 4 + i;
+                    User user = createUser("test" + index + "@example.com", "nickname" + index, provider);
+                    UserStatus status = Stream.of(ACTIVE, BANNED, WITHDRAWN)
+                        .skip(index % 3)
+                        .findFirst()
+                        .orElse(ACTIVE);
+                    user.updateUserStatus(status);
+                    return user;
+                }))
+            .toList();
+        userRepository.saveAll(users);
+
+        PageRequestVO pageRequestVO = PageRequestVO.of(1, 10);
+
+        List<UserStatus> userStatuses = List.of(ACTIVE, WITHDRAWN);
+        List<OAuth2Provider> oAuth2Providers = List.of(GOOGLE, KAKAO);
+
+        // when
+        PageResponseDto<UserDetailResponseDto> result = userService.getUserList(pageRequestVO, ID_DESC,
+            userStatuses, oAuth2Providers, NICKNAME, "nickname");
+
+        // then
+        assertThat(result.getTotalItems()).isEqualTo(5);
+        assertThat(result.getContent().get(1).oAuth2Provider()).isEqualTo(KAKAO);
+        assertThat(result.getContent().get(1).userStatus()).isEqualTo(WITHDRAWN);
     }
 
     @DisplayName("사용자를 차단할 수 있다.")
