@@ -1,5 +1,6 @@
 package com.mars.app.domain.comment.community.controller;
 
+import com.mars.app.aop.audit.AuditLog;
 import com.mars.app.aop.auth.AuthenticatedUser;
 import com.mars.app.component.auth.AuthenticationHolder;
 import com.mars.common.dto.page.PageResponseDto;
@@ -8,6 +9,7 @@ import com.mars.app.domain.comment.community.dto.CommunityCommentRequestDto;
 import com.mars.app.domain.comment.community.dto.CommunityCommentResponseDto;
 import com.mars.app.domain.comment.community.service.CommunityCommentService;
 import com.mars.common.dto.page.PageRequestVO;
+import com.mars.common.enums.audit.AuditActionType;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +41,7 @@ public class CommunityCommentController {
     }
 
     @Operation(summary = "댓글 작성")
+    @AuditLog(action = AuditActionType.COMMUNITY_COMMENT_CREATE, dtoType = CommunityCommentRequestDto.class)
     @AuthenticatedUser
     @PostMapping
     public ResponseDto<CommunityCommentResponseDto> create(
@@ -50,6 +53,7 @@ public class CommunityCommentController {
     }
 
     @Operation(summary = "댓글 수정")
+    @AuditLog(action = AuditActionType.COMMUNITY_COMMENT_UPDATE, dtoType = CommunityCommentRequestDto.class)
     @AuthenticatedUser
     @PutMapping("/{commentId}")
     public ResponseDto<CommunityCommentResponseDto> update(
@@ -62,6 +66,7 @@ public class CommunityCommentController {
     }
 
     @Operation(summary = "댓글 삭제")
+    @AuditLog(action = AuditActionType.COMMUNITY_COMMENT_DELETE)
     @AuthenticatedUser
     @DeleteMapping("/{commentId}")
     public ResponseDto<Void> delete(
