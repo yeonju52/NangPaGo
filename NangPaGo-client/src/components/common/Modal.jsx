@@ -1,13 +1,20 @@
-import React from 'react';
 import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
 
 function Modal({ isOpen, onClose, title, description, children, buttons }) {
-  if (!isOpen) return null;
+  if (!isOpen) {
+    return null;
+  }
 
   const {
-    primary: { text: primaryButtonText = '확인', onClick: primaryButtonAction = onClose } = {},
-    secondary: { text: secondaryButtonText, onClick: secondaryButtonAction } = {},
+    primary: {
+      text: primaryButtonText = '확인',
+      onClick: primaryButtonAction = onClose,
+    } = {},
+    secondary: {
+      text: secondaryButtonText,
+      onClick: secondaryButtonAction,
+    } = {},
   } = buttons || {};
 
   const handleBackgroundClick = (e) => {
@@ -22,11 +29,13 @@ function Modal({ isOpen, onClose, title, description, children, buttons }) {
       onClick={handleBackgroundClick}
     >
       <div
-        className="bg-white p-8 rounded-lg relative flex flex-col items-center max-w-[300px] w-[calc(100%-32px)]"
+        className="bg-white p-8 rounded-lg relative flex flex-col items-center max-w-[350px] w-[calc(100%-32px)]"
         onClick={(e) => e.stopPropagation()}
       >
         {title && (
-          <p className="text-center text-lg font-semibold text-text-600 mb-2">{title}</p>
+          <p className="text-center text-lg font-semibold text-text-600 mb-2">
+            {title}
+          </p>
         )}
         {description && (
           <p className="text-center text-sm text-gray-500">{description}</p>
@@ -43,21 +52,23 @@ function Modal({ isOpen, onClose, title, description, children, buttons }) {
           )}
           <button
             onClick={primaryButtonAction}
-            className={`bg-primary text-white px-5 py-3 rounded-lg ${secondaryButtonText ? 'ml-2' : ''}`}
+            className={`bg-primary text-white px-5 py-3 rounded-lg ${
+              secondaryButtonText ? 'ml-2' : ''
+            }`}
           >
             {primaryButtonText}
           </button>
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }
 
 Modal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
-  children: PropTypes.node.isRequired,
+  children: PropTypes.node,
   title: PropTypes.string,
   buttons: PropTypes.shape({
     primary: PropTypes.shape({

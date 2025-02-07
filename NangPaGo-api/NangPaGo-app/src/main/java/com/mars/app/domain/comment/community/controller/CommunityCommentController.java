@@ -1,13 +1,17 @@
 package com.mars.app.domain.comment.community.controller;
 
+import com.mars.app.aop.audit.AuditLog;
 import com.mars.app.aop.auth.AuthenticatedUser;
 import com.mars.app.component.auth.AuthenticationHolder;
+import com.mars.app.domain.user.message.UserNotificationMessagePublisher;
 import com.mars.common.dto.page.PageResponseDto;
 import com.mars.common.dto.ResponseDto;
 import com.mars.app.domain.comment.community.dto.CommunityCommentRequestDto;
 import com.mars.app.domain.comment.community.dto.CommunityCommentResponseDto;
 import com.mars.app.domain.comment.community.service.CommunityCommentService;
 import com.mars.common.dto.page.PageRequestVO;
+import com.mars.common.enums.audit.AuditActionType;
+import com.mars.common.enums.user.UserNotificationEventCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class CommunityCommentController {
 
     private final CommunityCommentService communityCommentService;
+    private final UserNotificationMessagePublisher userNotificationMessagePublisher;
 
     @Operation(summary = "댓글 목록 조회")
     @GetMapping
@@ -39,17 +44,29 @@ public class CommunityCommentController {
     }
 
     @Operation(summary = "댓글 작성")
+    @AuditLog(action = AuditActionType.COMMUNITY_COMMENT_CREATE, dtoType = CommunityCommentRequestDto.class)
     @AuthenticatedUser
     @PostMapping
     public ResponseDto<CommunityCommentResponseDto> create(
         @RequestBody CommunityCommentRequestDto requestDto,
-        @PathVariable("id") Long id) {
+        @PathVariable("id") Long postId) {
 
         Long userId = AuthenticationHolder.getCurrentUserId();
-        return ResponseDto.of(communityCommentService.create(requestDto, userId, id), "댓글이 성공적으로 추가되었습니다.");
+        CommunityCommentResponseDto communityCommentResponseDto = communityCommentService.create(requestDto, userId,
+            postId);
+
+        // 유저 알림 발송
+        userNotificationMessagePublisher.createUserNotification(
+            UserNotificationEventCode.USER_RECIPE_COMMENT,
+            userId,
+            postId
+        );
+
+        return ResponseDto.of(communityCommentResponseDto, "댓글이 성공적으로 추가되었습니다.");
     }
 
     @Operation(summary = "댓글 수정")
+    @AuditLog(action = AuditActionType.COMMUNITY_COMMENT_UPDATE, dtoType = CommunityCommentRequestDto.class)
     @AuthenticatedUser
     @PutMapping("/{commentId}")
     public ResponseDto<CommunityCommentResponseDto> update(
@@ -62,6 +79,7 @@ public class CommunityCommentController {
     }
 
     @Operation(summary = "댓글 삭제")
+    @AuditLog(action = AuditActionType.COMMUNITY_COMMENT_DELETE)
     @AuthenticatedUser
     @DeleteMapping("/{commentId}")
     public ResponseDto<Void> delete(

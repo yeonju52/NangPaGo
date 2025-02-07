@@ -1,29 +1,9 @@
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, LineChart, Line } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, LineChart, Line, ComposedChart, } from 'recharts';
 import { UserIcon, DocumentTextIcon } from '@heroicons/react/24/outline'
 import { useState, useEffect } from 'react';
-import {
-  getTotals
-} from '../api/total';
+import { getDashboardData } from '../api/total';
 
 // 더미 데이터
-const userStats = [
-  { name: '1월', users: 400 },
-  { name: '2월', users: 300 },
-  { name: '3월', users: 600 },
-  { name: '4월', users: 800 },
-  { name: '5월', users: 1000 },
-  { name: '6월', users: 1200 },
-];
-
-const postStats = [
-  { name: '1월', posts: 200 },
-  { name: '2월', posts: 400 },
-  { name: '3월', posts: 300 },
-  { name: '4월', posts: 600 },
-  { name: '5월', posts: 800 },
-  { name: '6월', posts: 1000 },
-];
-
 const dailyUserStats = [
   { name: '6/7', users: 0 },
   { name: '6/8', users: 445 },
@@ -79,19 +59,22 @@ const monthlyAverageLoginStats = [
 ];
 
 export default function Home() {
-const [totalData, setTotalData] = useState({});
+  const [dashboardData, setDashboardData] = useState({});
+  const [months, setMonths] = useState(11);
 
-    useEffect(() => {
-      const fetchData = async () => {
-        try {
-          const response = await getTotals();
-          setTotalData(response.data)
-        } catch (error) {
-          console.error('데이터 가져오기 에러: ', error);
-        }
-      };
-      fetchData();
-    }, []);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+      const response = await getDashboardData(months);
+        setDashboardData(response.data);
+      } catch (error) {
+        console.error('대시보드 데이터 가져오기 에러: ', error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   return (
     <div className="p-6">
       {/* 통계 카드 */}
@@ -104,8 +87,12 @@ const [totalData, setTotalData] = useState({});
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">총 사용자</dt>
-                  <dd className="text-3xl font-semibold text-gray-900">{totalData.userCount || 0}</dd>
+                  <dt className="text-sm font-medium text-gray-500 truncate">
+                    총 사용자
+                  </dt>
+                  <dd className="text-3xl font-semibold text-gray-900">
+                    {dashboardData.totals?.userCount || 0}
+                  </dd>
                 </dl>
               </div>
             </div>
@@ -120,8 +107,12 @@ const [totalData, setTotalData] = useState({});
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">총 게시글</dt>
-                  <dd className="text-3xl font-semibold text-gray-900">{totalData.communityCount || 0}</dd>
+                  <dt className="text-sm font-medium text-gray-500 truncate">
+                    총 게시글
+                  </dt>
+                  <dd className="text-3xl font-semibold text-gray-900">
+                    {dashboardData.totals?.communityCount || 0}
+                  </dd>
                 </dl>
               </div>
             </div>
@@ -133,28 +124,29 @@ const [totalData, setTotalData] = useState({});
       <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
         <div className="bg-white overflow-hidden shadow rounded-lg">
           <div className="p-5">
-            <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">월별 사용자 통계</h3>
-            <LineChart width={500} height={300} data={userStats}>
+            <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">월별 회원가입통계</h3>
+            <ComposedChart width={600} height={300} data={dashboardData.monthlyRegisterData}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
+              <XAxis dataKey="month" />
               <YAxis />
               <Tooltip />
               <Legend />
-              <Line type="monotone" dataKey="users" stroke="#8884d8" />
-            </LineChart>
+              <Bar dataKey="userCount" name="사용자 수" fill="#87CEEB" />
+              <Line type="monotone" dataKey="userCount" stroke="#8884d8" />
+            </ComposedChart>
           </div>
         </div>
 
         <div className="bg-white overflow-hidden shadow rounded-lg">
           <div className="p-5">
             <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">월별 게시글 통계</h3>
-            <BarChart width={500} height={300} data={postStats}>
+            <BarChart width={600} height={300} data={dashboardData.monthPostCountData}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
+              <XAxis dataKey="month" />
               <YAxis />
               <Tooltip />
               <Legend />
-              <Bar dataKey="posts" fill="#82ca9d" />
+              <Bar dataKey="count" name="게시글 수" fill="#82ca9d" />
             </BarChart>
           </div>
         </div>
@@ -162,7 +154,7 @@ const [totalData, setTotalData] = useState({});
         <div className="bg-white overflow-hidden shadow rounded-lg">
           <div className="p-5">
             <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">일일 접속자 통계</h3>
-            <LineChart width={500} height={300} data={dailyUserStats}>
+            <LineChart width={600} height={300} data={dailyUserStats}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
               <YAxis />
@@ -172,10 +164,11 @@ const [totalData, setTotalData] = useState({});
             </LineChart>
           </div>
         </div>
+
         <div className="bg-white overflow-hidden shadow rounded-lg">
           <div className="p-5">
             <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">월 평균 시간대별 사용자 활동 현황</h3>
-            <LineChart width={500} height={300} data={monthlyAverageLoginStats}>
+            <LineChart width={600} height={300} data={monthlyAverageLoginStats}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis
                 dataKey="time"
@@ -200,5 +193,5 @@ const [totalData, setTotalData] = useState({});
         </div>
       </div>
     </div>
-  )
-} 
+  );
+}

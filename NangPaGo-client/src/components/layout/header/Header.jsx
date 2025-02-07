@@ -1,27 +1,72 @@
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../../../slices/loginSlice.js';
 import axiosInstance from '../../../api/axiosInstance.js';
-import { CgSmartHomeRefrigerator } from 'react-icons/cg';
-import { CgList } from "react-icons/cg";
-import { CgProfile } from "react-icons/cg";
-import { CgLogIn } from "react-icons/cg";
-import { useState, useRef, useEffect } from 'react';
-import ProfileDropdown from './ProfileDropdown.jsx';
+import {
+  CgSmartHomeRefrigerator,
+  CgList,
+  CgProfile,
+  CgLogIn
+} from 'react-icons/cg';
 import NavItem from './NavItem.jsx';
+import { BiBlanket } from 'react-icons/bi';
+import ProfileDropdown from './ProfileDropdown.jsx';
+import { HEADER_STYLES } from '../../../common/styles/Header';
 
 function Header({ isBlocked = false }) {
   const loginState = useSelector((state) => state.loginSlice);
   const dispatch = useDispatch();
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const dropdownRef = useRef(null);
   const location = useLocation();
   const navigate = useNavigate();
+  const [isReconnecting, setIsReconnecting] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+
+  const handleSseError = useCallback(() => {
+    if (!isReconnecting) {
+      setIsReconnecting(true);
+      setTimeout(() => {
+        setIsReconnecting(false);
+      }, 3000);
+    }
+  }, [isReconnecting]);
+
+  // SSE 구독 설정
+  useEffect(() => {
+    let eventSource = null;
+
+    if (loginState.isLoggedIn) {
+      const baseUrl = import.meta.env.VITE_HOST || '';
+      eventSource = new EventSource(
+        `${baseUrl}/api/user/notification/subscribe`,
+        { withCredentials: true }
+      );
+
+      const eventName = 'USER_NOTIFICATION_EVENT';
+
+      eventSource.addEventListener(eventName, (event) => {
+        const eventData = JSON.parse(event.data);
+        setNotifications((prev) => [...prev, eventData]);
+      });
+
+      eventSource.onerror = () => {
+        eventSource.close();
+        handleSseError();
+      };
+    }
+
+    return () => {
+      if (eventSource) {
+        eventSource.close();
+      }
+    };
+  }, [loginState.isLoggedIn, handleSseError]);
 
   const handleUnsavedChanges = (isBlocked) => {
     if (isBlocked) {
-      const confirmed = window.confirm('작성 중인 내용을 저장하지 않고 이동하시겠습니까?');
-      return confirmed;
+      return window.confirm(
+        '작성 중인 내용을 저장하지 않고 이동하시겠습니까?',
+      );
     }
     return true;
   };
@@ -30,35 +75,16 @@ function Header({ isBlocked = false }) {
     if (!handleUnsavedChanges(isBlocked)) {
       return;
     }
-
     try {
+      navigate('/'); // 로그아웃 전 루트로 이동 (unauthenticated 페이지 방지)
       await axiosInstance.post('/api/logout');
       dispatch(logout());
-      setTimeout(() => {
-        navigate('/');
-      }, 0);
     } catch (error) {
       console.error('로그아웃 실패:', error.response?.data || error.message);
     }
   };
 
-  const toggleDropdown = () => {
-    setDropdownOpen((prev) => !prev);
-  };
-
   const isActive = (path) => location.pathname.startsWith(path);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
 
   const handleLinkClick = (path) => {
     if (!handleUnsavedChanges(isBlocked)) {
@@ -72,18 +98,19 @@ function Header({ isBlocked = false }) {
   }
 
   return (
-    <header className="sticky top-0 z-50 bg-white shadow-md w-full px-1 py-2 mb-4">
-      <div className="flex flex-row items-center justify-between px-4">
-        <div className="flex items-center justify-center w-17 h-17">
+    <header className={HEADER_STYLES.header}>
+      <div className={HEADER_STYLES.headerContainer}>
+        <div className={HEADER_STYLES.logoContainer}>
           <img
             src="/logo.png"
             alt="냉파고"
-            className="h-12 w-auto cursor-pointer"
+            className={HEADER_STYLES.logo}
             onClick={() => handleLinkClick('/')}
           />
         </div>
-        <div className="flex items-center justify-center space-x-4">
+        <div className={HEADER_STYLES.navContainer}>
           {loginState.isLoggedIn && (
+            <>
             <NavItem
               to="/refrigerator"
               isActive={isActive('/refrigerator')}
@@ -91,6 +118,14 @@ function Header({ isBlocked = false }) {
               Icon={CgSmartHomeRefrigerator}
               onClick={() => handleLinkClick('/refrigerator')}
             />
+            <NavItem
+                to="/user-recipe"
+                isActive={isActive('/user-recipe')}
+                label="유저 레시피"
+                Icon={BiBlanket}
+                onClick={() => handleLinkClick('/user-recipe/list')}
+              />
+              </>
           )}
           <NavItem
             to="/community"
@@ -101,14 +136,12 @@ function Header({ isBlocked = false }) {
           />
           {loginState.isLoggedIn ? (
             <ProfileDropdown
-              dropdownRef={dropdownRef}
-              dropdownOpen={dropdownOpen}
-              toggleDropdown={toggleDropdown}
-              handleLogout={handleLogout}
-              handleLinkClick={handleLinkClick}
               isActive={isActive('/my-page')}
-              icon={CgProfile}
+              Icon={CgProfile}
               nickname={loginState.nickname}
+              notifications={notifications}
+              onLogout={handleLogout}
+              onLinkClick={handleLinkClick}
             />
           ) : (
             <NavItem

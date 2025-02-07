@@ -1,5 +1,6 @@
 package com.mars.app.domain.community.controller;
 
+import com.mars.app.aop.audit.AuditLog;
 import com.mars.app.aop.auth.AuthenticatedUser;
 import com.mars.app.component.auth.AuthenticationHolder;
 import com.mars.common.dto.page.PageResponseDto;
@@ -8,6 +9,7 @@ import com.mars.app.domain.community.dto.CommunityRequestDto;
 import com.mars.app.domain.community.dto.CommunityResponseDto;
 import com.mars.app.domain.community.service.CommunityService;
 import com.mars.common.dto.page.PageRequestVO;
+import com.mars.common.enums.audit.AuditActionType;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -45,6 +47,7 @@ public class CommunityController {
         return ResponseDto.of(communityService.getPostForEdit(id, userId), "게시물을 성공적으로 가져왔습니다.");
     }
 
+    @AuditLog(action = AuditActionType.COMMUNITY_CREATE, dtoType = CommunityRequestDto.class)
     @Operation(summary = "게시물 작성")
     @AuthenticatedUser
     @PostMapping
@@ -57,18 +60,20 @@ public class CommunityController {
         return ResponseDto.of(communityService.createCommunity(requestDto, file, userId), "게시물이 성공적으로 생성되었습니다.");
     }
 
+    @AuditLog(action = AuditActionType.COMMUNITY_UPDATE, dtoType = CommunityRequestDto.class)
     @Operation(summary = "게시물 수정")
     @AuthenticatedUser
     @PutMapping("/{id}")
     public ResponseDto<CommunityResponseDto> update(
         @ModelAttribute @Valid CommunityRequestDto requestDto,
         @RequestParam(value = "file", required = false) MultipartFile file,
-        @PathVariable("id") Long id) {
+        @PathVariable("id") Long communityId) {
 
         Long userId = AuthenticationHolder.getCurrentUserId();
-        return ResponseDto.of(communityService.updateCommunity(id, requestDto, file, userId), "게시물이 성공적으로 수정되었습니다.");
+        return ResponseDto.of(communityService.updateCommunity(communityId, requestDto, file, userId), "게시물이 성공적으로 수정되었습니다.");
     }
 
+    @AuditLog(action = AuditActionType.COMMUNITY_DELETE)
     @Operation(summary = "게시물 삭제")
     @AuthenticatedUser
     @DeleteMapping("/{id}")

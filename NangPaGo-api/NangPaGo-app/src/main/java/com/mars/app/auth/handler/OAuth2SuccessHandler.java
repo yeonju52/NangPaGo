@@ -2,7 +2,9 @@ package com.mars.app.auth.handler;
 
 import static com.mars.common.exception.NPGExceptionType.NOT_FOUND_USER;
 
+import com.mars.app.aop.audit.AuditLog;
 import com.mars.app.auth.vo.OAuth2UserImpl;
+import com.mars.common.enums.audit.AuditActionType;
 import com.mars.common.util.web.CookieUtil;
 import com.mars.common.util.web.JwtUtil;
 import com.mars.app.domain.auth.service.OAuth2ProviderTokenService;
@@ -44,6 +46,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     private final UserRepository userRepository;
 
     @Override
+    @AuditLog(action = AuditActionType.USER_LOGIN)
     public void onAuthenticationSuccess(
         HttpServletRequest request,
         HttpServletResponse response,
@@ -63,6 +66,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
         renewOauth2ProviderToken(authentication, user.getId());
         issueAccessAndRefreshTokens(response, user, email, authentication);
+        // TODO: 로그인 감사 로그 추가 예정
         response.sendRedirect(clientHost);
     }
 
