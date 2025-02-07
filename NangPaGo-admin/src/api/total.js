@@ -1,23 +1,12 @@
 import axiosInstance from './axiosInstance';
 
-export const getTotals = async () => {
+export const getDashboardData = async () => {
   try {
-    const response = await axiosInstance.get('/api/dashboard');
+    const response = await axiosInstance.get(`/api/dashboard`);
     return response.data;
   } catch (error) {
     throw new Error(
-      `관리자 페이지를 불러오는 중 에러가 발생했습니다.: ${error.message}`,
-    );
-  }
-};
-
-export const getMonthPostTotals = async () => {
-  try {
-    const response = await axiosInstance.get('/api/dashboard/stats/post');
-    return response.data;
-  } catch (error) {
-    throw new Error(
-      `관리자 페이지를 불러오는 중 에러가 발생했습니다.: ${error.message}`,
+      `대시보드 데이터를 불러오는 중 에러가 발생했습니다: ${error.message}`
     );
   }
 };
