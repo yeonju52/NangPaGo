@@ -10,6 +10,7 @@ import {
   CgLogIn
 } from 'react-icons/cg';
 import NavItem from './NavItem.jsx';
+import { BiBlanket } from 'react-icons/bi';
 import ProfileDropdown from './ProfileDropdown.jsx';
 import { HEADER_STYLES } from '../../../common/styles/Header';
 
@@ -109,6 +110,7 @@ function Header({ isBlocked = false }) {
         </div>
         <div className={HEADER_STYLES.navContainer}>
           {loginState.isLoggedIn && (
+            <>
             <NavItem
               to="/refrigerator"
               isActive={isActive('/refrigerator')}
@@ -116,6 +118,14 @@ function Header({ isBlocked = false }) {
               Icon={CgSmartHomeRefrigerator}
               onClick={() => handleLinkClick('/refrigerator')}
             />
+            <NavItem
+                to="/user-recipe"
+                isActive={isActive('/user-recipe')}
+                label="유저 레시피"
+                Icon={BiBlanket}
+                onClick={() => handleLinkClick('/user-recipe/list')}
+              />
+              </>
           )}
           <NavItem
             to="/community"
