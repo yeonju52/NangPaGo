@@ -1,10 +1,31 @@
+import { useState } from 'react';
 import { IMAGE_STYLES } from '../../common/styles/Image';
 import { FaTimes } from 'react-icons/fa';
+import OnlyImageUploadModal from '../../components/modal/OnlyImageUploadModal';
+
+const IMAGE_ALLOWED_EXTENSIONS = [
+  "jpg", "jpeg", "png", "gif", "webp", "heic", "heif", "tiff", "tif", "bmp", "raw", "cr2", "nef", "arw", "dng", "rw2", "orf", "sr2"
+];
 
 function FileUpload({ file, onChange, imagePreview, onCancel }) {
+  const [showOnlyImageUpload, setShowOnlyImageUpload] = useState(false);
   const handleCancel = (e) => {
     e.preventDefault();
     onCancel();
+  };
+
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+
+    if (selectedFile) {
+      const fileExtension = selectedFile.name.split('.').pop().toLowerCase();
+      if (!IMAGE_ALLOWED_EXTENSIONS.includes(fileExtension)) {
+        setShowOnlyImageUpload(true);
+        e.target.value = '';
+        return;
+      }
+      onChange(e);
+    }
   };
 
   return (
@@ -36,10 +57,15 @@ function FileUpload({ file, onChange, imagePreview, onCancel }) {
           type="file"
           accept="image/*"
           className="absolute inset-0 opacity-0 cursor-pointer"
-          onChange={onChange}
+          onChange={handleFileChange}
           key={file ? file.name : 'file-upload'}
         />
       </label>
+
+      <OnlyImageUploadModal
+        isOpen={showOnlyImageUpload}
+        onClose={() => setShowOnlyImageUpload(false)}
+      />
     </div>
   );
 }
