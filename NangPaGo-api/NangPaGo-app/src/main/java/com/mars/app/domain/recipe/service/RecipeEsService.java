@@ -11,11 +11,13 @@ import com.mars.app.domain.comment.recipe.repository.RecipeCommentRepository;
 import com.mars.app.domain.recipe.builder.EsRecipeSearchQueryBuilder;
 import com.mars.app.domain.recipe.dto.RecipeEsResponseDto;
 import com.mars.common.model.recipe.RecipeEs;
-import com.mars.app.domain.recipe.repository.RecipeLikeRepository;
+import com.mars.app.domain.recipe.repository.like.RecipeLikeRepository;
+import com.mars.common.model.recipe.RecipeLike;
+import com.mars.common.model.user.User;
+import java.util.ArrayList;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -30,14 +32,14 @@ public class RecipeEsService {
     private final RecipeLikeRepository recipeLikeRepository;
     private final RecipeCommentRepository recipeCommentRepository;
 
-    public Page<RecipeEsResponseDto> searchRecipes(PageRequestVO pageRequestVO, String keyword, String searchType) {
+    public Page<RecipeEsResponseDto> searchRecipes(PageRequestVO pageRequestVO, String keyword, String searchType, Long userId) {
         Pageable pageable = pageRequestVO.toPageable();
 
         EsRecipeSearchQueryBuilder queryBuilder = new EsRecipeSearchQueryBuilder();
         Query query = queryBuilder.buildSearchQuery(keyword, searchType);
 
         SearchResponse<RecipeEs> response = getRecipeEsSearchResponse(query, pageable);
-        List<RecipeEsResponseDto> results = getResponseDtos(response);
+        List<RecipeEsResponseDto> results = getResponseDtos(response, userId);
 
         long total = Optional.ofNullable(response.hits().total())
             .map(totalHits -> Optional.of(totalHits.value()).orElse(0L))
@@ -68,7 +70,9 @@ public class RecipeEsService {
         }
     }
 
-    private List<RecipeEsResponseDto> getResponseDtos(SearchResponse<RecipeEs> response) {
+    private List<RecipeEsResponseDto> getResponseDtos(SearchResponse<RecipeEs> response, Long userId) {
+        List<RecipeLike> recipeLikes = getRecipeLikesBy(userId);
+
         return response.hits().hits().stream()
             .filter(hit -> hit.source() != null)
             .map(hit -> {
@@ -83,16 +87,22 @@ public class RecipeEsService {
                 int likeCount = getRecipeLikeCountBy(source.getId());
                 int commentCount = getRecipeCommentCountBy(source.getId());
 
-
                 return RecipeEsResponseDto.of(
                     source,
                     highlightedName,
                     likeCount,
                     commentCount,
+                    recipeLikes,
                     matchScore
                 );
             })
             .toList();
+    }
+
+    private List<RecipeLike> getRecipeLikesBy(Long userId) {
+        return userId.equals(User.ANONYMOUS_USER_ID)
+            ? new ArrayList<>()
+            : recipeLikeRepository.findRecipeLikesByUserId(userId);
     }
 
     private int getRecipeLikeCountBy(String recipeId) {
