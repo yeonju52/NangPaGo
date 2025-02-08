@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
-import { AiFillHeart } from 'react-icons/ai';
-import { FaCommentAlt } from 'react-icons/fa';
+import { FaRegHeart, FaRegComment } from 'react-icons/fa';
 import { IMAGE_STYLES } from '../../common/styles/Image';
+import { PAGE_STYLES } from '../../common/styles/ListPage';
 
 function RecipeCard({ recipe }) {
   return (
@@ -16,22 +16,22 @@ function RecipeCard({ recipe }) {
       />
       <div className="p-4 flex flex-col gap-2">
         <div className="text-sm text-text-400 flex items-center gap-4">
-          <div className="flex items-center gap-1">
-            <AiFillHeart className="text-red-500 text-xl" />
+          <div className="flex items-center gap-1 text-gray-600">
+            <FaRegHeart className="text-xl" />
             {recipe.likeCount}
           </div>
-          <div className="flex items-center gap-1">
-            <FaCommentAlt className="text-text-400 text-xl" />
+          <div className="flex items-center gap-1 text-gray-600">
+            <FaRegComment className="text-xl" />
             {recipe.commentCount}
           </div>
         </div>
 
-        <h3 className="text-md font-semibold">{recipe.name}</h3>
+        <h2 className="text-lg font-semibold">{recipe.name}</h2>
         <div className="flex flex-wrap gap-2">
           {recipe.ingredientsDisplayTag.map((tag, index) => (
             <span
               key={index}
-              className="bg-secondary text-text-900 text-sm px-2 py-1 rounded"
+              className={PAGE_STYLES.tag}
             >
               {tag}
             </span>

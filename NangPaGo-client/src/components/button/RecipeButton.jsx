@@ -1,5 +1,4 @@
 import { FaHeart, FaRegHeart, FaStar, FaRegStar  } from 'react-icons/fa';
-import { IoHeartOutline, IoHeart } from 'react-icons/io5';
 
 function RecipeButton({
   isHeartActive,
@@ -13,7 +12,7 @@ function RecipeButton({
     <div className={`flex items-center justify-between gap-4 ${className}`}>
       <button
         className={`flex items-center bg-white ${
-          isHeartActive ? 'text-red-500' : 'text-text-400'
+          isHeartActive ? 'text-red-500' : 'text-gray-600'
         }`}
         onClick={toggleHeart}
       >
@@ -28,7 +27,7 @@ function RecipeButton({
       </button>
       <button
         className={`bg-white ${
-          isStarActive ? 'text-primary' : 'text-text-400'
+          isStarActive ? 'text-primary' : 'text-gray-600'
         }`}
         onClick={toggleStar}
       >
