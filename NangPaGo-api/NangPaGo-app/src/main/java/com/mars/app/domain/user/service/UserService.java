@@ -5,10 +5,10 @@ import com.mars.app.domain.community.repository.CommunityRepository;
 import com.mars.common.dto.page.PageResponseDto;
 import com.mars.common.dto.page.PageRequestVO;
 import com.mars.common.exception.NPGExceptionType;
-import com.mars.app.domain.comment.recipe.dto.RecipeCommentResponseDto;
-import com.mars.app.domain.comment.recipe.repository.RecipeCommentRepository;
-import com.mars.app.domain.favorite.recipe.dto.RecipeFavoriteListResponseDto;
-import com.mars.app.domain.favorite.recipe.repository.RecipeFavoriteRepository;
+import com.mars.app.domain.recipe.dto.comment.RecipeCommentResponseDto;
+import com.mars.app.domain.recipe.repository.RecipeCommentRepository;
+import com.mars.app.domain.recipe.dto.favorite.RecipeFavoriteListResponseDto;
+import com.mars.app.domain.recipe.repository.RecipeFavoriteRepository;
 import com.mars.app.domain.recipe.dto.RecipeResponseDto;
 import com.mars.app.domain.recipe.repository.RecipeLikeRepository;
 import com.mars.app.domain.refrigerator.repository.RefrigeratorRepository;
@@ -19,6 +19,7 @@ import com.mars.common.dto.user.UserResponseDto;
 import com.mars.common.model.recipe.Recipe;
 import com.mars.common.model.user.User;
 import com.mars.app.domain.user.repository.UserRepository;
+import java.util.ArrayList;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -67,7 +68,7 @@ public class UserService {
                     Recipe recipe = recipeFavorite.getRecipe();
                     int likeCount = recipeLikeRepository.countByRecipeId(recipe.getId());
                     int commentCount = recipeCommentRepository.countByRecipeId(recipe.getId());
-                    return RecipeFavoriteListResponseDto.of(recipe, likeCount, commentCount);
+                    return RecipeFavoriteListResponseDto.of(recipe, likeCount, commentCount, new ArrayList<>());
                 })
         );
     }

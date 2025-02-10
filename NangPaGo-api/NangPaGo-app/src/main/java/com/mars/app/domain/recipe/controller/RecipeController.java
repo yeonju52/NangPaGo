@@ -1,21 +1,15 @@
 package com.mars.app.domain.recipe.controller;
 
-import com.mars.app.domain.recipe.message.RecipeLikeMessagePublisher;
-import com.mars.app.domain.recipe.event.RecipeLikeSseService;
 import com.mars.common.dto.ResponseDto;
-import com.mars.app.aop.auth.AuthenticatedUser;
 import com.mars.app.component.auth.AuthenticationHolder;
 import com.mars.common.dto.page.PageRequestVO;
-import com.mars.common.exception.NPGExceptionType;
 import com.mars.app.domain.recipe.dto.RecipeEsResponseDto;
-import com.mars.app.domain.recipe.dto.RecipeLikeResponseDto;
 import com.mars.app.domain.recipe.dto.RecipeResponseDto;
 import com.mars.app.domain.recipe.service.RecipeEsService;
 import com.mars.app.domain.recipe.service.RecipeEsSynchronizerService;
-import com.mars.app.domain.recipe.service.RecipeLikeService;
 import com.mars.app.domain.recipe.service.RecipeService;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,59 +18,35 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @RequiredArgsConstructor
-@Tag(name = "레시피 API", description = "레시피 관련 API")
+@Tag(name = "레시피 API", description = "공공 데이터 레시피 검색 및 추천")
 @RequestMapping("/api/recipe")
 @RestController
 public class RecipeController {
 
     private final RecipeService recipeService;
-    private final RecipeLikeService recipeLikeService;
     private final RecipeEsService recipeEsService;
     private final RecipeEsSynchronizerService recipeEsSynchronizerService;
-    private final RecipeLikeMessagePublisher recipeLikeMessagePublisher;
-    private final RecipeLikeSseService recipeLikeSseService;
 
+    @Operation(summary = "레시피 상세 조회")
     @GetMapping("/{id}")
     public ResponseDto<RecipeResponseDto> recipeById(@PathVariable("id") Long id) {
         return ResponseDto.of(recipeService.recipeById(id));
     }
 
-    @AuthenticatedUser
-    @GetMapping("/{id}/like/status")
-    public ResponseDto<Boolean> getRecipeLikeStatus(@PathVariable Long id) {
-        Long userId = AuthenticationHolder.getCurrentUserId();
-        return ResponseDto.of(recipeLikeService.isLiked(id, userId));
-    }
-
-    @AuthenticatedUser
-    @PostMapping("/{id}/like/toggle")
-    public ResponseDto<RecipeLikeResponseDto> toggleRecipeLike(@PathVariable Long id) {
-        Long userId = AuthenticationHolder.getCurrentUserId();
-        return ResponseDto.of(recipeLikeMessagePublisher.toggleLike(id, userId));
-    }
-
-    @GetMapping("/{id}/like/count")
-    public ResponseDto<Integer> getLikeCount(@PathVariable Long id) {
-        return ResponseDto.of(recipeLikeService.getLikeCount(id));
-    }
-
-    @GetMapping("/{id}/like/notification/subscribe")
-    public SseEmitter streamLikes(@PathVariable Long id) {
-        return recipeLikeSseService.createEmitter(id);
-    }
-
+    @Operation(summary = "추천 레시피 조회, 레시피 검색", description = "keyword 를 비워서 요청하면 '추천 레시피 조회' 동작")
     @GetMapping("/search")
     public ResponseDto<Page<RecipeEsResponseDto>> searchRecipes(
         PageRequestVO pageRequestVO,
         @RequestParam(name = "keyword", required = false) String keyword,
         @RequestParam(name = "searchType", defaultValue = "INGREDIENTS") String searchType) {
 
-        return ResponseDto.of(recipeEsService.searchRecipes(pageRequestVO, keyword, searchType));
+        Long userId = AuthenticationHolder.getCurrentUserId();
+        return ResponseDto.of(recipeEsService.searchRecipes(pageRequestVO, keyword, searchType, userId));
     }
 
+    @Operation(summary = "MySQL 원천 데이터를 ES에 덮어쓰기", description = "ES의 기존 데이터 삭제 후 재생성 (실행 전 주의 필요!!)")
     @PostMapping("/bulk-upload/mysql")
     public ResponseDto<String> syncMysql() {
         return ResponseDto.of(recipeEsSynchronizerService.insertRecipeFromMysql(), "MySQL 데이터를 Elastic에 성공적으로 동기화했습니다");

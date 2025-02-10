@@ -1,12 +1,7 @@
-import { Fragment } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { FaHeart } from 'react-icons/fa';
-import ToggleButton from '../button/ToggleButton';
+import { Fragment, useState, useEffect } from 'react';
+import { FaHeart, FaRegHeart } from 'react-icons/fa';
 import { IMAGE_STYLES } from '../../common/styles/Image';
-import { deleteCommunity } from '../../api/community';
-import usePostStatus from '../../hooks/usePostStatus';
-
-const maskEmail = (email) => (email ? `${email.slice(0, 3)}***` : '');
+import PostStatusButton from '../button/PostStatusButton';
 
 const formatDate = (date) =>
   new Intl.DateTimeFormat('ko-KR', {
@@ -24,53 +19,15 @@ const renderContentLines = (content) =>
   ));
 
 function Community({ post, data: community, isLoggedIn }) {
-  const {
-    isHeartActive,
-    likeCount,
-    toggleHeart,
-    modalState,
-    setModalState,
-  } = usePostStatus(post, isLoggedIn);
-
-  const navigate = useNavigate();
-
-  const handleDeleteClick = async () => {
-    if (window.confirm('정말로 글을 삭제하시겠습니까?')) {
-      try {
-        await deleteCommunity(community.id);
-        navigate('/community');
-      } catch (error) {
-        console.error('Failed to delete community:', error);
-        alert('글 삭제에 실패했습니다.');
-      }
-    }
-  };
-
-  const handleCreateClick = () =>
-    navigate('/community/new', { state: { from: window.location.pathname } });
-
-  const handleEditClick = () =>
-    navigate(`/community/${community.id}/modify`, {
-      state: { from: window.location.pathname },
-    });
-
-  const actions = community.isOwnedByUser
-    ? [
-        { label: '글작성', onClick: handleCreateClick },
-        { label: '글수정', onClick: handleEditClick },
-        { label: '글삭제', onClick: handleDeleteClick },
-      ]
-    : [{ label: '글작성', onClick: handleCreateClick }];
-
   return (
     <>
       <div className="mt-6 px-4">
         <h1 className="text-xl font-bold">{community.title}</h1>
         <div className="mt-2 flex flex-col text-gray-500 text-xs">
           <span>
-            <strong>{maskEmail(community.email)}</strong>
+            <strong className="mr-2">{community.nickname}</strong>
+              <span>・ {formatDate(community.updatedAt)} </span>
           </span>
-          <span>{formatDate(community.updatedAt)}</span>
         </div>
       </div>
       <div className="mt-4 px-4">
@@ -81,22 +38,16 @@ function Community({ post, data: community, isLoggedIn }) {
         />
       </div>
       <div className="mt-2 flex items-center justify-between px-4">
-        <button
-          className={`flex items-center bg-white ${
-            isHeartActive ? 'text-red-500' : 'text-gray-500'
-          }`}
-          onClick={toggleHeart}
-        >
-          <FaHeart className="text-2xl" />
-          <span className="text-sm ml-1">{likeCount}</span>
-        </button>
+        <PostStatusButton
+          post={post}
+          isLoggedIn={isLoggedIn}
+        />
       </div>
       <div className="mt-4 px-4">
         <p className="text-gray-700 text-sm">
           {renderContentLines(community.content)}
         </p>
       </div>
-      <ToggleButton actions={actions}/>
     </>
   );
 }

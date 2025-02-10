@@ -1,5 +1,4 @@
-import { AiFillHeart } from 'react-icons/ai';
-import { FaCommentAlt } from 'react-icons/fa';
+import { FaHeart, FaRegHeart, FaRegComment } from 'react-icons/fa';
 import { IMAGE_STYLES } from '../../common/styles/Image';
 
 function CommunityCard({ item, onClick }) {
@@ -11,12 +10,16 @@ function CommunityCard({ item, onClick }) {
       <img src={item.imageUrl} alt={item.title} className={IMAGE_STYLES.imageList} />
       <div className="p-4 space-y-2">
         <div className="flex items-center gap-4 text-text-400">
-          <div className="flex items-center gap-1">
-            <AiFillHeart className="text-red-500 text-lg" />
+          <div className="flex items-center gap-1 text-gray-600">
+            {item.isLiked ? (
+              <FaHeart className="text-xl text-red-500" />
+            ) : (
+              <FaRegHeart className="text-xl" />
+            )}
             <span>{item.likeCount}</span>
           </div>
-          <div className="flex items-center gap-1">
-            <FaCommentAlt className="text-text-400 text-lg" />
+          <div className="flex items-center gap-1 text-gray-600">
+            <FaRegComment className="text-xl" />
             <span>{item.commentCount}</span>
           </div>
         </div>

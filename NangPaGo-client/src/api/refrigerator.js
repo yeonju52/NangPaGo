@@ -1,4 +1,5 @@
 import axiosInstance from './axiosInstance';
+import { PAGE_INDEX, PAGE_SIZE } from '../common/constants/pagination.js';
 
 export async function getRefrigerator(page, size) {
   try {
@@ -48,15 +49,24 @@ export async function deleteIngredient(ingredientName) {
   }
 }
 
-export const searchPostsByIngredient = async (ingredients, page, size) => {
+export async function searchPostsByIngredient(
+  ingredients = [],
+  pageNo = PAGE_INDEX.one,
+  pageSize = PAGE_SIZE.list,
+) {
   try {
     const keyword = ingredients.join(' ');
     const response = await axiosInstance.get('/api/recipe/search', {
-      params: { pageNo: page, pageSize: size, keyword },
+      params: {
+        pageNo,
+        pageSize,
+        keyword,
+      },
     });
-    return response.data.data;
+    return response.data;
   } catch (error) {
-    console.error('레시피를 가져오는 중 오류가 발생했습니다:', error);
-    throw error;
+    throw new Error(
+      `레시피를 가져오는 중 오류가 발생했습니다: ${error.message}`,
+    );
   }
-};
+}

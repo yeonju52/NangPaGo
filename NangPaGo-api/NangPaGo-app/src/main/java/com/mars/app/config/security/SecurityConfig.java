@@ -24,6 +24,8 @@ import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import java.util.Arrays;
+import java.util.stream.Stream;
 
 @RequiredArgsConstructor
 @Configuration
@@ -39,22 +41,38 @@ public class SecurityConfig {
         "/api/oauth2/authorization/**",
         "/api/login/oauth2/code/**",
         "/api/auth/reissue",
-        "/api/recipe/search",
-        "/api/recipe/{id}",
-        "/api/recipe/{id}/comment",
-        "/api/recipe/{id}/comment/count",
-        "/api/recipe/{id}/like/count",
-        "/api/recipe/{id}/like/notification/subscribe",
         "/api/ingredient/search",
-        "/api/community/{id}",
-        "/api/community/{id}/comment",
-        "/api/community/{id}/comment/count",
-        "/api/community/{id}/like/count",
+    };
+    private static final String[] WHITE_LIST_SWAGGER = {
         "/swagger-ui/**",
         "/swagger-ui.html",
         "/api-docs/**",
         "/v3/api-docs/**",
     };
+    private static final String[] WHITE_LIST_RECIPE = {
+        "/api/recipe/search",
+        "/api/recipe/{id}",
+        "/api/image/optimize",
+        "/api/recipe/{id}/comment",
+        "/api/recipe/{id}/comment/count",
+        "/api/recipe/{id}/like/count",
+        "/api/recipe/{id}/like/notification/subscribe",
+    };
+    private static final String[] WHITE_LIST_COMMUNITY = {
+        "/api/community/{id}",
+        "/api/community/{id}/comment",
+        "/api/community/{id}/comment/count",
+        "/api/community/{id}/like/count",
+        "/api/community/{id}/like/notification/subscribe",
+    };
+    private static final String[] WHITE_LIST_USER_RECIPE = {
+        "/api/user-recipe/{id}",
+        "/api/user-recipe/{id}/comment",
+        "/api/user-recipe/{id}/comment/count",
+        "/api/user-recipe/{id}/like/count",
+        "/api/user-recipe/{id}/like/notification/subscribe",
+    };
+
 
     private final JwtUtil jwtUtil;
     private final OAuth2UserService oauth2UserService;
@@ -62,7 +80,8 @@ public class SecurityConfig {
     private final OAuth2LogoutService oauth2LogoutService;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, ClientRegistrationRepository clientRegistrationRepository) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http,
+        ClientRegistrationRepository clientRegistrationRepository) throws Exception {
 
         OAuth2AuthorizationRequestResolver customResolver =
             new OAuth2RequestResolver(clientRegistrationRepository, "/api/oauth2/authorization");
@@ -91,7 +110,16 @@ public class SecurityConfig {
                 .successHandler(oauth2SuccessHandler)
             )
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers(WHITE_LIST).permitAll()
+                .requestMatchers(
+                    Stream.of(WHITE_LIST,
+                            WHITE_LIST_SWAGGER,
+                            WHITE_LIST_RECIPE,
+                            WHITE_LIST_COMMUNITY,
+                            WHITE_LIST_USER_RECIPE
+                        )
+                        .flatMap(Arrays::stream)
+                        .toArray(String[]::new)
+                ).permitAll()
                 .requestMatchers(
                     "/api/recipe/{id}/comment/**",
                     "/api/recipe/{id}/like/**",
