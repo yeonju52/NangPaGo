@@ -4,24 +4,9 @@ import NutritionInfo from './NutritionInfo';
 import IngredientList from './IngredientList';
 import RecipeImage from './RecipeImage';
 import RecipeInfo from './RecipeInfo';
-import RecipeButton from '../button/RecipeButton';
-import usePostStatus from '../../hooks/usePostStatus';
-import LoginModal from '../modal/LoginModal';
-
-import 'slick-carousel/slick/slick.css';
-import 'slick-carousel/slick/slick-theme.css';
+import PostStatusButton from '../button/PostStatusButton';
 
 function Recipe({ post, data: recipe, isLoggedIn }) {
-  const {
-    isHeartActive,
-    isStarActive,
-    likeCount,
-    toggleHeart,
-    toggleStar,
-    modalState,
-    setModalState,
-  } = usePostStatus(post, isLoggedIn);
-
   const rightSectionRef = useRef(null);
   const imageRef = useRef(null);
   const sliderRef = useRef(null);
@@ -69,12 +54,9 @@ function Recipe({ post, data: recipe, isLoggedIn }) {
           recipeName={recipe.name}
         />
         <div className="mt-4 md:hidden">
-          <RecipeButton
-            isHeartActive={isHeartActive}
-            isStarActive={isStarActive}
-            likeCount={likeCount}
-            toggleHeart={toggleHeart}
-            toggleStar={toggleStar}
+          <PostStatusButton
+            post={post}
+            isLoggedIn={isLoggedIn}
             className="w-full"
           />
         </div>
@@ -86,12 +68,9 @@ function Recipe({ post, data: recipe, isLoggedIn }) {
             <div className="flex flex-col md:flex-row md:items-start md:justify-between mt-4 md:mt-0">
               <RecipeInfo recipe={recipe} />
               <div className="hidden md:flex items-center gap-4">
-                <RecipeButton
-                  isHeartActive={isHeartActive}
-                  isStarActive={isStarActive}
-                  likeCount={likeCount}
-                  toggleHeart={toggleHeart}
-                  toggleStar={toggleStar}
+                <PostStatusButton
+                  post={post}
+                  isLoggedIn={isLoggedIn}
                 />
               </div>
             </div>
@@ -129,13 +108,6 @@ function Recipe({ post, data: recipe, isLoggedIn }) {
           </span>
         </div>
       </section>
-      {modalState.type === 'login' && (
-        <LoginModal
-          isOpen={true}
-          onClose={() => setModalState({ type: null, data: null })}
-          description={modalState.data}
-        />
-      )}
     </>
   );
 }
