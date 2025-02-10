@@ -3,6 +3,7 @@ package com.mars.app.domain.user.service;
 import com.mars.app.domain.user.dto.UserNotificationCountResponseDto;
 import com.mars.app.domain.user.dto.UserNotificationResponseDto;
 import com.mars.app.domain.user.repository.UserNotificationRepository;
+import com.mars.app.domain.user.repository.UserRepository;
 import com.mars.common.model.user.UserNotification;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -17,6 +18,7 @@ public class UserNotificationService {
     private static final long NOTIFICATION_RETENTION_DAYS = 14;
 
     private final UserNotificationRepository userNotificationRepository;
+    private final UserRepository userRepository;
 
     @Transactional
     public List<UserNotificationResponseDto> getRecentNotifications(Long userId) {
@@ -34,8 +36,13 @@ public class UserNotificationService {
 
     public UserNotificationCountResponseDto getUnreadNotificationCount(Long userId) {
         long countIsReadFalse = userNotificationRepository.countByUserIdAndIsReadFalse(userId);
-        return UserNotificationCountResponseDto.builder()
-            .count(countIsReadFalse)
-            .build();
+        return UserNotificationCountResponseDto.of(countIsReadFalse);
+    }
+
+    @Transactional
+    public UserNotificationCountResponseDto deleteUserNotificationBy(Long userId) {
+        long deletedCount = userNotificationRepository.countByUserId(userId);
+        userNotificationRepository.deleteByUserId(userId);
+        return UserNotificationCountResponseDto.of(deletedCount);
     }
 }

@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import clsx from 'clsx';
 import { HEADER_STYLES } from '../../../common/styles/Header';
-import { BiChevronLeft } from "react-icons/bi";
 import LogoutModal from '../../modal/LogoutModal';
-import { FaRegUser, FaSignOutAlt, FaRegBell } from 'react-icons/fa';
-import { getNotificationList } from '../../../api/notification';
+import { FaRegUser, FaSignOutAlt, FaRegBell, FaRegTrashAlt, FaChevronLeft } from 'react-icons/fa';
+import { getNotificationList, deleteNotification } from '../../../api/notification';
+import { useNavigate } from 'react-router-dom';
 
 const ProfileDropdown = ({
   isActive,
@@ -113,6 +113,7 @@ const ProfileDropdown = ({
           <NotificationPanel
             onBack={handleBackClick}
             notifications={notifications}
+            setNotifications={setNotifications}
             onNotificationsRead={onNotificationsRead}
           />
         )}
@@ -166,7 +167,27 @@ const DropdownMenu = ({ notificationCount, onNicknameClick, onMyPageClick, onLog
   </DropdownContainer>
 );
 
-const NotificationPanel = ({ onBack, notifications, onNotificationsRead }) => {
+const getNotificationMessage = (notification) => {
+  const { eventCode, senderNickname } = notification;
+  const truncatedNickname = senderNickname.length > 8 
+    ? `${senderNickname.slice(0, 8)}...` 
+    : senderNickname;
+
+  switch (eventCode) {
+    case 'C01':
+    case 'U01':
+      return `${truncatedNickname}님이 회원님의 게시물을 좋아합니다.`;
+    case 'C02':
+    case 'U02':
+      return `${truncatedNickname}님이 회원님의 게시물에 댓글을 남겼습니다.`;
+    default:
+      return `게시물에 새로운 알림이 있습니다.`;
+  }
+};
+
+const NotificationPanel = ({ onBack, notifications, setNotifications, onNotificationsRead }) => {
+  const navigate = useNavigate();
+
   useEffect(() => {
     const markAsRead = async () => {
       onNotificationsRead();  
@@ -177,18 +198,49 @@ const NotificationPanel = ({ onBack, notifications, onNotificationsRead }) => {
     }
   }, [notifications, onNotificationsRead]);
 
+  const handleNotificationClick = (notification) => {
+    const { eventCode, postId } = notification;
+    const isCommunityEvent = eventCode.startsWith('C');
+    const path = isCommunityEvent ? `/community/${postId}` : `/user-recipe/${postId}`;
+    navigate(path);
+  };
+
+  const handleDeleteNotification = async () => {
+    await deleteNotification();
+    setNotifications([]);
+  };
+
   return (
-    <DropdownContainer width="w-64">
+    <DropdownContainer width="w-80">
       <div className="px-4 py-2">
-        <button onClick={onBack} className={HEADER_STYLES.back}>
-          <BiChevronLeft size={25} className="mr-auto" />
-        </button>
+        <div className="flex items-center justify-between mt-1 mb-3">
+          <button onClick={onBack} className={HEADER_STYLES.back}>
+            <FaChevronLeft />
+          </button>
+          {notifications.length > 0 && (
+            <button 
+              onClick={handleDeleteNotification} 
+              className={HEADER_STYLES.trashButton}
+            >
+              <FaRegTrashAlt />
+            </button>
+          )}
+        </div>
         {notifications.length > 0 ? (
           <ul className="max-h-60 overflow-y-auto overflow-x-hidden -mr-2 pr-2">
             {notifications.map((notification, index) => (
-              <li key={index} className={clsx(HEADER_STYLES.notificationMessage, "border-b border-secondary last:border-b-0")}>
+              <li 
+                key={index} 
+                className={clsx(
+                  HEADER_STYLES.notificationMessage, 
+                  "border-b border-secondary last:border-b-0 cursor-pointer",
+                  "transition-all duration-200 ease-in-out",
+                  "hover:bg-gray-50 hover:pl-2"
+                )}
+                onClick={() => handleNotificationClick(notification)}
+              >
                 <p className="text-sm">
-                  {notification.postType === 'COMMUNITY' ? '커뮤니티' : '레시피'} 게시물에 새로운 알림이 있습니다.
+                  {getNotificationMessage(notification)}
                 </p>
                 <span className="text-xs text-gray-500">
                   {new Date(notification.timestamp).toLocaleString()}

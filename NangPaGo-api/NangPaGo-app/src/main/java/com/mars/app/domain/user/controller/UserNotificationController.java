@@ -8,7 +8,6 @@ import com.mars.app.domain.user.event.UserNotificationSseService;
 import com.mars.app.domain.user.service.UserNotificationService;
 import com.mars.common.dto.ResponseDto;
 import com.mars.common.exception.NPGException;
-import com.mars.common.model.user.UserNotification;
 import com.mars.common.util.web.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -17,8 +16,8 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -60,5 +59,13 @@ public class UserNotificationController {
     public ResponseDto<UserNotificationCountResponseDto> getUnreadNotificationCount() {
         Long userId = AuthenticationHolder.getCurrentUserId();
         return ResponseDto.of(userNotificationService.getUnreadNotificationCount(userId));
+    }
+
+    @Operation(summary = "유저 알림 삭제")
+    @AuthenticatedUser
+    @DeleteMapping
+    public ResponseDto<UserNotificationCountResponseDto> deleteUserNotificationByUserId() {
+        Long userId = AuthenticationHolder.getCurrentUserId();
+        return ResponseDto.of(userNotificationService.deleteUserNotificationBy(userId));
     }
 }
