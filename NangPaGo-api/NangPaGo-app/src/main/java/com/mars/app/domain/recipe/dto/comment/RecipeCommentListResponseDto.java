@@ -6,22 +6,22 @@ import java.time.LocalDateTime;
 import lombok.Builder;
 
 @Builder
-public record RecipeCommentResponseDto(
+public record RecipeCommentListResponseDto(
     Long id,
     Long postId,
     String content,
-    String writerName,
-    boolean isOwnedByUser,
-    LocalDateTime createdAt,
+    String mainImageUrl,
+    String title,
+    LocalDateTime createdAt, // TODO: UI 추가 - 마이페이지 내 댓글 리스트에서 날짜
     LocalDateTime updatedAt
 ) {
-    public static RecipeCommentResponseDto from(RecipeComment recipeComment, Recipe recipe, Long userId) {
-        return RecipeCommentResponseDto.builder()
+    public static RecipeCommentListResponseDto of(RecipeComment recipeComment, Recipe recipe) {
+        return RecipeCommentListResponseDto.builder()
             .id(recipeComment.getId())
             .postId(recipeComment.getRecipe().getId())
             .content(recipeComment.getContent())
-            .writerName(recipeComment.getUser().getNickname())
-            .isOwnedByUser(recipeComment.getUser().getId().equals(userId))
+            .mainImageUrl(recipe.getMainImage())
+            .title(recipe.getName())
             .createdAt(recipeComment.getCreatedAt())
             .updatedAt(recipeComment.getUpdatedAt())
             .build();

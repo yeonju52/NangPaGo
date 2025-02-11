@@ -22,9 +22,9 @@ function RecipeSearch() {
   }
 
   function handleResultClick(recipe) {
-    setKeyword(recipe.name);
+    setKeyword(recipe.title);
     navigate('/', {
-      state: { searchTerm: recipe.name },
+      state: { searchTerm: recipe.title },
     });
   }
 
