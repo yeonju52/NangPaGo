@@ -1,4 +1,4 @@
-package com.mars.app.config.rabbitmq.impl;
+package com.mars.common.config.rabbitmq.impl;
 
 import com.mars.common.config.rabbitmq.RabbitMQCommonConfig;
 import com.mars.common.config.rabbitmq.RabbitMQConfig;
@@ -12,19 +12,19 @@ import org.springframework.context.annotation.Configuration;
 
 @RequiredArgsConstructor
 @Configuration
-public class CommunityLikeRabbitConfig implements RabbitMQConfig {
+public class VisitLogRabbitConfig implements RabbitMQConfig {
 
-    private static final String ROUTING_KEY = "community.like.*";
+    private static final String ROUTING_KEY = "visit.log.*";
     private final RabbitMQCommonConfig rabbitMQCommonConfig;
 
     @Override
-    @Bean(name = "communityLikeQueue")
+    @Bean(name = "visitLogQueue")
     public Queue queue() {
         return new Queue(getQueueName());
     }
 
     @Override
-    @Bean(name = "communityLikeKeyBinding")
+    @Bean(name = "visitLogKeyBinding")
     public Binding binding(TopicExchange exchange) {
         return BindingBuilder.bind(queue()).to(exchange).with(getRoutingKey());
     }
@@ -36,6 +36,6 @@ public class CommunityLikeRabbitConfig implements RabbitMQConfig {
 
     @Override
     public String getQueueName() {
-        return "community-like-notification-queue-" + rabbitMQCommonConfig.getDeveloper();
+        return "visit-log-write-queue-" + rabbitMQCommonConfig.getDeveloper();
     }
 }
