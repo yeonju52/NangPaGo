@@ -1,10 +1,9 @@
 package com.mars.admin.config.security;
 
 import com.mars.admin.auth.entrypoint.UnauthorizedEntryPoint;
-import com.mars.admin.auth.filter.JwtAuthenticationFilter;
 import com.mars.admin.auth.handler.AdminSuccessHandler;
+import com.mars.admin.auth.handler.AdminFailureHandler;
 import com.mars.admin.auth.service.AdminLogoutSuccessHandler;
-import com.mars.common.util.web.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -12,37 +11,35 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.security.config.http.SessionCreationPolicy;
 
 @RequiredArgsConstructor
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Value("${client.host}")
-    private String clientHost;
-
     private static final String[] WHITE_LIST = {
-        "/api/auth/reissue",
         "/swagger-ui/**",
         "/swagger-ui.html",
         "/api-docs/**",
         "/v3/api-docs/**",
     };
 
-    private final JwtUtil jwtUtil;
     private final AdminSuccessHandler adminSuccessHandler;
+    private final AdminFailureHandler adminFailureHandler;
     private final AdminLogoutSuccessHandler adminLogoutSuccessHandler;
 
+    @Value("${client.host}")
+    private String clientHost;
+
     @Bean
-    public PasswordEncoder passwordEncoder(){
+    public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
@@ -58,16 +55,17 @@ public class SecurityConfig {
                 .usernameParameter("email")
                 .passwordParameter("password")
                 .successHandler(adminSuccessHandler)
+                .failureHandler(adminFailureHandler)
             )
             .logout(logout -> logout
                 .logoutUrl("/api/logout")
                 .logoutSuccessHandler(adminLogoutSuccessHandler)
             )
-            .httpBasic(AbstractHttpConfigurer::disable)
             .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .sessionFixation().changeSessionId() // 세션 고정 보호
+                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
             )
-            .addFilterBefore(new JwtAuthenticationFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class)
+            .httpBasic(AbstractHttpConfigurer::disable)
             .exceptionHandling(exception -> exception
                 .authenticationEntryPoint(new UnauthorizedEntryPoint())
             )

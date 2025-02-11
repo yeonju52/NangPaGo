@@ -3,8 +3,9 @@ import { useLocation } from 'react-router-dom';
 import Header from '../../components/layout/header/Header';
 import IngredientList from '../../components/refrigerator/IngredientList';
 import AddIngredientForm from '../../components/refrigerator/AddIngredientForm';
-import RecipeCard from '../../components/recipe/RecipeCard';
+import ContentCard from '../../components/common/ContentCard';
 import TopButton from '../../components/button/TopButton';
+import { PAGE_STYLES } from '../../common/styles/ListPage.js';
 
 function Refrigerator() {
   const {
@@ -23,7 +24,7 @@ function Refrigerator() {
 
   const hasChecked = ingredients.some((i) => i.checked);
   const location = useLocation();
-
+  
   return (
     <div className="bg-white shadow-md mx-auto min-h-screen flex flex-col justify-between max-w-screen-sm md:max-w-screen-md lg:max-w-screen-lg">
       <Header />
@@ -46,12 +47,16 @@ function Refrigerator() {
           </>
         ) : (
           <>
-            <div className="mt-6 flex-grow flex flex-col">
-              <h2 className="text-lg font-medium mb-4">추천 레시피</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="flex-grow flex flex-col">
+              <div className={PAGE_STYLES.header}> 추천 레시피 </div>
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {recipes.length > 0 ? (
-                  recipes.map((recipe) => (
-                    <RecipeCard key={recipe.id} recipe={recipe} />
+                  recipes.map((recipe, index) => (
+                    <ContentCard
+                      key={recipe.id || recipe.name || recipe.title || `recipe-${index}`}
+                      type="recipe"
+                      data={recipe}
+                    />
                   ))
                 ) : (
                   <p className="text-center text-gray-500">
@@ -70,7 +75,9 @@ function Refrigerator() {
             onClick={handleFindRecipes}
             disabled={!hasChecked}
             className={`w-full py-3 text-lg font-medium ${
-              hasChecked ? '' : 'bg-yellow-200 text-white cursor-not-allowed'
+              hasChecked
+                ? ''
+                : 'bg-yellow-200 text-white cursor-not-allowed'
             }`}
           >
             선택한 재료로 레시피 찾기
@@ -78,7 +85,7 @@ function Refrigerator() {
         ) : (
           <button
             onClick={resetAndGoBack}
-            className="w-full py-3 text-lg font-medium "
+            className="w-full py-3 text-lg font-medium"
           >
             돌아가기
           </button>

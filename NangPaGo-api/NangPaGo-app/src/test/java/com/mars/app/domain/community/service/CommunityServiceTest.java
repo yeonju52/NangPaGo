@@ -1,5 +1,6 @@
 package com.mars.app.domain.community.service;
 
+import com.mars.app.domain.community.dto.CommunityListResponseDto;
 import com.mars.app.domain.community.repository.CommunityCommentRepository;
 import com.mars.app.domain.community.dto.CommunityRequestDto;
 import com.mars.app.domain.community.dto.CommunityResponseDto;
@@ -68,7 +69,7 @@ class CommunityServiceTest extends IntegrationTestSupport {
         // then
         assertThat(result.title()).isEqualTo("테스트제목");
         assertThat(result.content()).isEqualTo("테스트내용");
-        assertThat(result.imageUrl()).isNotBlank();
+        assertThat(result.mainImageUrl()).isNotBlank();
         assertThat(result.nickname()).isEqualTo("kimdonghwan");
         assertThat(result.isPublic()).isTrue();
         assertThat(result.likeCount()).isZero();
@@ -83,7 +84,7 @@ class CommunityServiceTest extends IntegrationTestSupport {
         User user = createUser("kimdonghwan");
         userRepository.save(user);
 
-        // of(user, title, content, imageUrl, isPublic)
+        // of(user, title, content, mainImageUrl, isPublic)
         Community community = Community.of(user, "공개제목", "공개내용", null, true);
         communityRepository.save(community);
 
@@ -119,7 +120,7 @@ class CommunityServiceTest extends IntegrationTestSupport {
 
         PageRequestVO pageRequestVO = new PageRequestVO(1, 12);
         // when
-        PageResponseDto<CommunityResponseDto> communityResponseDtoPageDto = communityService.pagesByCommunity(
+        PageResponseDto<CommunityListResponseDto> communityResponseDtoPageDto = communityService.pagesByCommunity(
             user.getId(), pageRequestVO);
 
         // then
@@ -127,8 +128,8 @@ class CommunityServiceTest extends IntegrationTestSupport {
             .extracting(PageResponseDto::getTotalPages, PageResponseDto::getTotalItems)
             .containsExactly(1, 3L);
         assertThat(communityResponseDtoPageDto.getContent())
-            .extracting(CommunityResponseDto::id)
-            .doesNotContain(communityOtherAuthorPrivate.getId());
+            .extracting(CommunityListResponseDto::id)
+            .doesNotContain(communityOtherAuthorPrivate.getId().toString());
     }
 
     @DisplayName("비공개 글을 작성자가 아닌 다른 사용자가 조회하면 예외가 발생한다.")
@@ -177,7 +178,7 @@ class CommunityServiceTest extends IntegrationTestSupport {
         // then
         assertThat(result.title()).isEqualTo("새제목");
         assertThat(result.content()).isEqualTo("새내용");
-        assertThat(result.imageUrl()).isEqualTo("sample.png");
+        assertThat(result.mainImageUrl()).isEqualTo("sample.png");
         assertThat(result.isPublic()).isFalse();
         assertThat(result.isOwnedByUser()).isTrue();
     }

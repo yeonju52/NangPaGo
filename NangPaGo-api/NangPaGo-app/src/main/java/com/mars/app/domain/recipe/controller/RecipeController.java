@@ -1,13 +1,16 @@
 package com.mars.app.domain.recipe.controller;
 
+import com.mars.app.aop.visit.VisitLog;
+import com.mars.app.domain.recipe.dto.RecipeEsListResponseDto;
+import com.mars.app.domain.recipe.dto.RecipeSearchResponseDto;
 import com.mars.common.dto.ResponseDto;
 import com.mars.app.component.auth.AuthenticationHolder;
 import com.mars.common.dto.page.PageRequestVO;
-import com.mars.app.domain.recipe.dto.RecipeEsResponseDto;
 import com.mars.app.domain.recipe.dto.RecipeResponseDto;
 import com.mars.app.domain.recipe.service.RecipeEsService;
 import com.mars.app.domain.recipe.service.RecipeEsSynchronizerService;
 import com.mars.app.domain.recipe.service.RecipeService;
+import com.mars.common.dto.page.PageResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -35,15 +38,26 @@ public class RecipeController {
         return ResponseDto.of(recipeService.recipeById(id));
     }
 
-    @Operation(summary = "추천 레시피 조회, 레시피 검색", description = "keyword 를 비워서 요청하면 '추천 레시피 조회' 동작")
-    @GetMapping("/search")
-    public ResponseDto<Page<RecipeEsResponseDto>> searchRecipes(
+    @VisitLog
+    @Operation(summary = "추천 레시피 조회 및 검색", description = "keyword 를 비워서 요청하면 추천 레시피 조회 동작")
+    @GetMapping("/recommendations")
+    public ResponseDto<PageResponseDto<RecipeEsListResponseDto>> searchRecipes(
         PageRequestVO pageRequestVO,
         @RequestParam(name = "keyword", required = false) String keyword,
         @RequestParam(name = "searchType", defaultValue = "INGREDIENTS") String searchType) {
-
         Long userId = AuthenticationHolder.getCurrentUserId();
-        return ResponseDto.of(recipeEsService.searchRecipes(pageRequestVO, keyword, searchType, userId));
+        return ResponseDto.of(recipeEsService.searchRecipes(userId, keyword, searchType, pageRequestVO));
+    }
+
+    @Operation(summary = "키워드로 레시피 검색", description = "검색 시 최소한의 정보만 반환")
+    @GetMapping("/search")
+    public ResponseDto<Page<RecipeSearchResponseDto>> searchRecipesByKeyword(
+        PageRequestVO pageRequestVO,
+        @RequestParam(name = "keyword") String keyword,
+        @RequestParam(name = "searchType", defaultValue = "NAME") String searchType
+    ) {
+        Page<RecipeSearchResponseDto> results = recipeEsService.searchRecipeByKeyword(pageRequestVO, keyword, searchType);
+        return ResponseDto.of(results);
     }
 
     @Operation(summary = "MySQL 원천 데이터를 ES에 덮어쓰기", description = "ES의 기존 데이터 삭제 후 재생성 (실행 전 주의 필요!!)")

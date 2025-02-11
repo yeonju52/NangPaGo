@@ -1,6 +1,8 @@
 package com.mars.app.domain.user_recipe.service;
 
 import static com.mars.common.exception.NPGExceptionType.*;
+
+import com.mars.app.domain.user_recipe.dto.UserRecipeListResponseDto;
 import com.mars.app.domain.user_recipe.dto.UserRecipeRequestDto;
 import com.mars.app.domain.user_recipe.dto.UserRecipeResponseDto;
 import com.mars.app.domain.user_recipe.repository.UserRecipeLikeRepository;
@@ -13,8 +15,8 @@ import com.mars.common.enums.userRecipe.UserRecipeStatus;
 import com.mars.common.model.user.User;
 import com.mars.app.domain.user.repository.UserRepository;
 import com.mars.common.model.userRecipe.*;
+import java.util.ArrayList;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -39,22 +41,29 @@ public class UserRecipeService {
             validateOwnership(userRecipe, userId);
         }
 
-        int likeCount = (int) userRecipeLikeRepository.countByUserRecipeId(userRecipe.getId());
-        int commentCount = (int) userRecipeCommentRepository.countByUserRecipeId(userRecipe.getId());
+        int likeCount = userRecipeLikeRepository.countByUserRecipeId(userRecipe.getId());
+        int commentCount = userRecipeCommentRepository.countByUserRecipeId(userRecipe.getId());
 
         return UserRecipeResponseDto.of(userRecipe, likeCount, commentCount, userId);
     }
 
-    public PageResponseDto<UserRecipeResponseDto> getPagedUserRecipes(PageRequestVO pageRequestVO, Long userId) {
-        Pageable pageable = pageRequestVO.toPageable();
+    public PageResponseDto<UserRecipeListResponseDto> getPagedUserRecipes(Long userId, PageRequestVO pageRequestVO) {
+        List<UserRecipeLike> userRecipeLikes = getUserRecipeLikesBy(userId);
+
         return PageResponseDto.of(
-            userRecipeRepository.findByIsPublicTrueOrUserIdAndRecipeStatus(userId, pageable)
-                .map(recipe -> {
-                    int likeCount = (int) userRecipeLikeRepository.countByUserRecipeId(recipe.getId());
-                    int commentCount = (int) userRecipeCommentRepository.countByUserRecipeId(recipe.getId());
-                    return UserRecipeResponseDto.of(recipe, likeCount, commentCount, userId);
+            userRecipeRepository.findByIsPublicTrueOrUserIdAndRecipeStatus(userId, pageRequestVO.toPageable())
+                .map(userRecipe -> {
+                    int likeCount = userRecipeLikeRepository.countByUserRecipeId(userRecipe.getId());
+                    int commentCount = userRecipeCommentRepository.countByUserRecipeId(userRecipe.getId());
+                    return UserRecipeListResponseDto.of(userRecipe, likeCount, commentCount, userRecipeLikes);
                 })
         );
+    }
+
+    private List<UserRecipeLike> getUserRecipeLikesBy(Long userId) {
+        return userId.equals(User.ANONYMOUS_USER_ID)
+            ? new ArrayList<>()
+            : userRecipeLikeRepository.findUserRecipeLikesByUserId(userId);
     }
 
     @Transactional(readOnly = true)
@@ -62,8 +71,8 @@ public class UserRecipeService {
         UserRecipe recipe = getUserRecipe(id);
         validateOwnership(recipe, userId);
 
-        int likeCount = (int) userRecipeLikeRepository.countByUserRecipeId(recipe.getId());
-        int commentCount = (int) userRecipeCommentRepository.countByUserRecipeId(recipe.getId());
+        int likeCount = userRecipeLikeRepository.countByUserRecipeId(recipe.getId());
+        int commentCount = userRecipeCommentRepository.countByUserRecipeId(recipe.getId());
 
         return UserRecipeResponseDto.of(recipe, likeCount, commentCount, userId);
     }
@@ -114,7 +123,7 @@ public class UserRecipeService {
 
     private String getUploadedImage(MultipartFile file, String existingImageUrl) {
         if (file != null && !file.isEmpty()) {
-            return firebaseStorageService.uploadFile(file);
+            return firebaseStorageService.uploadNewFile(file);
         }
         return (existingImageUrl == null || existingImageUrl.isBlank())
             ? UserRecipeResponseDto.DEFAULT_IMAGE_URL
@@ -123,8 +132,8 @@ public class UserRecipeService {
 
     @Transactional
     public UserRecipeResponseDto updateUserRecipe(Long id, UserRecipeRequestDto requestDto,
-                                                  MultipartFile mainFile, List<MultipartFile> otherFiles,
-                                                  Long userId) {
+        MultipartFile mainFile, List<MultipartFile> otherFiles,
+        Long userId) {
         UserRecipe recipe = userRecipeRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("레시피를 찾을 수 없습니다."));
 
@@ -132,13 +141,16 @@ public class UserRecipeService {
             throw new RuntimeException("권한이 없습니다.");
         }
 
+        String previousMainImageUrl = recipe.getMainImageUrl();
+
         String mainImageUrl = (mainFile != null && !mainFile.isEmpty()) ?
-            firebaseStorageService.uploadFile(mainFile) :
-            recipe.getMainImageUrl();
+            firebaseStorageService.updateFile(mainFile, previousMainImageUrl) : previousMainImageUrl;
 
         recipe.update(requestDto.getTitle(), requestDto.getContent(), requestDto.isPublic(), mainImageUrl);
+
         recipe.getIngredients().clear();
         recipe.getIngredients().addAll(buildIngredients(requestDto, recipe));
+
         recipe.getManuals().clear();
         recipe.getManuals().addAll(buildManuals(requestDto, otherFiles, recipe));
 
