@@ -8,7 +8,7 @@ import { BiArrowBack } from 'react-icons/bi';
 function RecipeSearch() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { keyword, setKeyword, results } = useRecipeSearch(
+  const { keyword, setKeyword, suggestions, results, fetchSearchResults } = useRecipeSearch(
     location.state?.searchTerm || '',
   );
 
@@ -22,15 +22,16 @@ function RecipeSearch() {
   }
 
   function handleResultClick(recipe) {
-    setKeyword(recipe.title);
+    setKeyword(recipe.title || '');
     navigate('/', {
-      state: { searchTerm: recipe.title },
+      state: { searchTerm: recipe.title || '' }, 
     });
   }
 
   function handleSubmit(e) {
     e.preventDefault();
     if (!keyword.trim()) return;
+    fetchSearchResults(keyword);
     navigate('/', {
       state: { searchTerm: keyword },
     });
@@ -47,7 +48,7 @@ function RecipeSearch() {
           <BiArrowBack className="text-text-400 text-2xl" />
         </button>
         <SearchInput
-          value={keyword}
+          value={keyword || ''}
           onChange={handleChange}
           onClear={clearKeyword}
           onSubmit={handleSubmit}
@@ -56,11 +57,22 @@ function RecipeSearch() {
 
       <div className="px-4 py-2">
         <SearchResult
-          results={results}
+          results={suggestions}
           parseHighlightedName={parseHighlightedName}
           onResultClick={handleResultClick}
         />
       </div>
+      
+      {results.length > 0 && (
+        <div className="px-4 py-2">
+          <h2 className="text-lg font-semibold mb-2">검색 결과</h2>
+          <SearchResult
+            results={results}
+            parseHighlightedName={parseHighlightedName}
+            onResultClick={handleResultClick}
+          />
+        </div>
+      )}
     </div>
   );
 }

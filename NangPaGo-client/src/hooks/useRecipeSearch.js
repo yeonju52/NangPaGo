@@ -1,25 +1,32 @@
 import { useState, useEffect } from 'react';
 import useDebounce from './useDebounce';
-import { searchPostsByKeyword } from '../api/recipe';
+import { fetchSearchSuggestions, searchPostsByKeyword } from '../api/recipe';
 
 export const useRecipeSearch = (initialKeyword = '', debounceDelay = 500) => {
   const [keyword, setKeyword] = useState(initialKeyword);
+  const [suggestions, setSuggestions] = useState([]);
   const [results, setResults] = useState([]);
   const debouncedKeyword = useDebounce(keyword, debounceDelay);
 
   useEffect(() => {
-    const fetchResults = async () => {
+    const fetchSuggestions = async () => {
       if (!debouncedKeyword.trim()) {
-        setResults([]);
+        setSuggestions([]);
         return;
       }
+      const data = await fetchSearchSuggestions(debouncedKeyword);
 
-      const data = await searchPostsByKeyword(debouncedKeyword);
-      setResults(data);
+      setSuggestions(data);
     };
-
-    fetchResults();
+    fetchSuggestions();
   }, [debouncedKeyword]);
 
-  return { keyword, setKeyword, results };
+  const fetchSearchResults = async (query) => {
+    if (!query.trim()) return;
+    const data = await searchPostsByKeyword(query);
+
+    setResults(data);
+  };
+
+  return { keyword, setKeyword, suggestions, results, fetchSearchResults };
 };

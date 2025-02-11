@@ -11,9 +11,36 @@ export const searchPostsByKeyword = async (
     const response = await axiosInstance.get('/api/recipe/search', {
       params: { pageNo, pageSize, keyword, searchType },
     });
-    return response.data.data.content;
+
+    return response.data.data.content.map((recipe, index) => ({
+      id: recipe.id || `search-${index}`,
+      title: recipe.title || recipe.name,
+      highlightedName: recipe.highlightedName || recipe.name || '',
+    }));
   } catch (error) {
     console.error('레시피 검색 요청 실패:', error);
+    return [];
+  }
+};
+
+export const fetchSearchSuggestions = async (
+  keyword,
+  pageNo = PAGE_INDEX.one,
+  pageSize = PAGE_SIZE.search,
+  searchType = 'NAME',
+) => {
+  try {
+    const response = await axiosInstance.get('/api/recipe/search', {
+      params: { pageNo, pageSize, keyword, searchType },
+    });
+
+    return response.data.data.content.map((recipe, index) => ({
+      id: recipe.id || `suggestion-${index}`,
+      title: recipe.title || recipe.name,
+      highlightedName: recipe.highlightedName || recipe.name || '',
+    }));
+  } catch (error) {
+    console.error('추천 검색 요청 실패:', error);
     return [];
   }
 };
@@ -29,7 +56,7 @@ export const fetchRecommendedPosts = async (
       pageSize,
       ...(searchTerm && { keyword: searchTerm, searchType: 'NAME' }),
     };
-    const response = await axiosInstance.get('/api/recipe/search', { params });
+    const response = await axiosInstance.get('/api/recipe/recommendations', { params });
 
     const { content, currentPage, last, totalItems, totalPages } = response.data.data;
     return { content: content || [], currentPage, last, totalItems, totalPages };
@@ -45,9 +72,7 @@ export const fetchFavoritePosts = async (page, size) => {
       pageNo: page,
       pageSize: size,
     };
-    const response = await axiosInstance.get('/api/recipe/favorite/list', {
-      params,
-    });
+    const response = await axiosInstance.get('/api/recipe/favorite/list', { params });
     const { content, currentPage, last, totalItems, totalPages } = response.data.data;
     return { content: content || [], currentPage, last, totalItems, totalPages };
   } catch (error) {
