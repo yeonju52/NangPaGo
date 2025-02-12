@@ -13,14 +13,24 @@ public enum AuditActionType {
     RECIPE_COMMENT_DELETE("레시피 댓글 삭제"),
 
     // Community
-    COMMUNITY_CREATE("유저 레시피 게시글 작성"),
-    COMMUNITY_UPDATE("유저 레시피 게시글 수정"),
-    COMMUNITY_DELETE("유저 레시피 게시글 삭제"),
+    COMMUNITY_CREATE("커뮤니티 게시글 작성"),
+    COMMUNITY_UPDATE("커뮤니티 게시글 수정"),
+    COMMUNITY_DELETE("커뮤니티 게시글 삭제"),
 
     // Community Comment
-    COMMUNITY_COMMENT_CREATE("유저 레시피 댓글 작성"),
-    COMMUNITY_COMMENT_UPDATE("유저 레시피 댓글 수정"),
-    COMMUNITY_COMMENT_DELETE("유저 레시피 댓글 삭제"),
+    COMMUNITY_COMMENT_CREATE("커뮤니티 댓글 작성"),
+    COMMUNITY_COMMENT_UPDATE("커뮤니티 댓글 수정"),
+    COMMUNITY_COMMENT_DELETE("커뮤니티 댓글 삭제"),
+
+    // User Recipe
+    USER_RECIPE_CREATE("유저 레시피 게시글 작성"),
+    USER_RECIPE_UPDATE("유저 레시피 게시글 수정"),
+    USER_RECIPE_DELETE("유저 레시피 게시글 삭제"),
+
+    // User Recipe Comment
+    USER_RECIPE_COMMENT_CREATE("유저 레시피 댓글 작성"),
+    USER_RECIPE_COMMENT_UPDATE("유저 레시피 댓글 수정"),
+    USER_RECIPE_COMMENT_DELETE("유저 레시피 댓글 삭제"),
 
     // User Info
     USER_INFO_UPDATE("회원 정보 갱신"),
