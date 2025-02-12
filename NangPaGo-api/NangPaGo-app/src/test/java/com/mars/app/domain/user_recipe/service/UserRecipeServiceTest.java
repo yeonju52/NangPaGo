@@ -2,8 +2,6 @@ package com.mars.app.domain.user_recipe.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 import com.mars.app.domain.firebase.service.FirebaseStorageService;
@@ -88,8 +86,6 @@ class UserRecipeServiceTest extends IntegrationTestSupport {
     @DisplayName("유저는 본인의 레시피를 수정할 수 있다.")
     @Test
     void updateUserRecipe() {
-        doNothing().when(firebaseStorageService).deleteFileFromFirebase(anyString());
-
         User user = User.builder().email("email@example.com").build();
         userRepository.save(user);
 

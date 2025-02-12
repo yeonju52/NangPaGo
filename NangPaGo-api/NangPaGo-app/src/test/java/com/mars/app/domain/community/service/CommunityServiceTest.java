@@ -59,7 +59,6 @@ class CommunityServiceTest extends IntegrationTestSupport {
         CommunityRequestDto requestDto = new CommunityRequestDto(
             "테스트제목",
             "테스트내용",
-            null,
             true
         );
 
@@ -117,7 +116,6 @@ class CommunityServiceTest extends IntegrationTestSupport {
             communityOtherAuthorPrivate
         ));
 
-
         PageRequestVO pageRequestVO = new PageRequestVO(1, 12);
         // when
         PageResponseDto<CommunityListResponseDto> communityResponseDtoPageDto = communityService.pagesByCommunity(
@@ -163,7 +161,6 @@ class CommunityServiceTest extends IntegrationTestSupport {
         CommunityRequestDto updateDto = new CommunityRequestDto(
             "새제목",
             "새내용",
-            "updatedImage.png",
             false
         );
 

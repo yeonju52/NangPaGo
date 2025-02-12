@@ -1,5 +1,6 @@
 package com.mars.app.domain.user_recipe.controller;
 
+import com.mars.app.aop.audit.AuditLog;
 import com.mars.app.aop.auth.AuthenticatedUser;
 import com.mars.app.component.auth.AuthenticationHolder;
 import com.mars.app.domain.user.message.UserNotificationMessagePublisher;
@@ -9,6 +10,7 @@ import com.mars.common.dto.ResponseDto;
 import com.mars.app.domain.user_recipe.service.UserRecipeCommentService;
 import com.mars.common.dto.page.PageRequestVO;
 import com.mars.common.dto.page.PageResponseDto;
+import com.mars.common.enums.audit.AuditActionType;
 import com.mars.common.enums.user.UserNotificationEventCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -29,12 +31,13 @@ public class UserRecipeCommentController {
     public ResponseDto<PageResponseDto<UserRecipeCommentResponseDto>> list(
         @PathVariable("id") Long id,
         PageRequestVO pageRequestVO
-    ){
+    ) {
         Long userId = AuthenticationHolder.getCurrentUserId();
         return ResponseDto.of(userRecipeCommentService.pagedCommentsByUserRecipe(id, userId, pageRequestVO));
     }
 
     @Operation(summary = "댓글 작성")
+    @AuditLog(action = AuditActionType.USER_RECIPE_COMMENT_CREATE, dtoType = UserRecipeCommentRequestDto.class)
     @AuthenticatedUser
     @PostMapping
     public ResponseDto<UserRecipeCommentResponseDto> create(
@@ -54,6 +57,7 @@ public class UserRecipeCommentController {
     }
 
     @Operation(summary = "댓글 수정")
+    @AuditLog(action = AuditActionType.USER_RECIPE_COMMENT_UPDATE, dtoType = UserRecipeCommentRequestDto.class)
     @AuthenticatedUser
     @PutMapping("/{commentId}")
     public ResponseDto<UserRecipeCommentResponseDto> update(
@@ -67,6 +71,7 @@ public class UserRecipeCommentController {
     }
 
     @Operation(summary = "댓글 삭제")
+    @AuditLog(action = AuditActionType.USER_RECIPE_COMMENT_DELETE)
     @AuthenticatedUser
     @DeleteMapping("/{commentId}")
     public ResponseDto<Void> delete(
