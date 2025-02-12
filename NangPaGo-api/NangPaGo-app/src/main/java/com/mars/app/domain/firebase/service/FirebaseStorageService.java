@@ -29,6 +29,8 @@ public class FirebaseStorageService {
     private static final String IMAGE_URL_PREFIX = "https://storage.googleapis.com/";
     private static final String IMAGE_CONTENT_TYPE = "image/";
     private static final String DEFAULT_EXTENSION = "jpg";
+    public static final String DEFAULT_IMAGE_URL =
+        "https://storage.googleapis.com/nangpago-9d371.firebasestorage.app/dc137676-6240-4920-97d3-727c4b7d6d8d_360_F_517535712_q7f9QC9X6TQxWi6xYZZbMmw5cnLMr279.jpg";
 
     private static final int TARGET_WIDTH = 960;
     private static final int TARGET_HEIGHT = 540;
@@ -62,7 +64,7 @@ public class FirebaseStorageService {
     }
 
     public void deleteFileFromFirebase(String imageUrl) {
-        if (imageUrl == null || imageUrl.isBlank()) {
+        if (imageUrl == null || imageUrl.isBlank() || imageUrl.equals(DEFAULT_IMAGE_URL)) {
             return;
         }
 
@@ -83,6 +85,7 @@ public class FirebaseStorageService {
     private boolean isValidFile(MultipartFile file) {
         return file == null || file.isEmpty();
     }
+
     private byte[] getFileBytes(MultipartFile file) {
         try {
             return file.getBytes();
